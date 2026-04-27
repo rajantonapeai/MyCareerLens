@@ -1,0 +1,12 @@
+# robots.txt for MyCareerLens
+# https://rajantonapeai.github.io/mycareerlens/
+
+# Allow all well-behaved crawlers to index everything
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://rajantonapeai.github.io/mycareerlens/sitemap.xml
+
+# Polite crawl delay (seconds) — keeps load light on free GitHub Pages tier
+Crawl-delay: 1
