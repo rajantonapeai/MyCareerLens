@@ -24,6 +24,10 @@
 <!-- Canonical URL — single source of truth for crawlers -->
 <link rel="canonical" href="https://rajantonapeai.github.io/mycareerlens/">
 
+<!-- hreflang — explicit India-English + default. Mirrors sitemap.xml. -->
+<link rel="alternate" hreflang="en-IN" href="https://rajantonapeai.github.io/mycareerlens/">
+<link rel="alternate" hreflang="x-default" href="https://rajantonapeai.github.io/mycareerlens/">
+
 <!-- ============================================================
      OPEN GRAPH (Facebook, WhatsApp, LinkedIn, Slack, Telegram, etc.)
      Renders a rich preview card when the URL is shared.
@@ -88,9 +92,10 @@
     "availability": "https://schema.org/InStock"
   },
   "creator": {
-    "@type": "Person",
-    "name": "Mr. Rajan Tonape",
-    "description": "Visionary for Young India"
+    "@id": "https://rajantonapeai.github.io/mycareerlens/#rajan-tonape"
+  },
+  "publisher": {
+    "@id": "https://rajantonapeai.github.io/mycareerlens/#rajan-tonape"
   },
   "featureList": [
     "100% free — no payment, no premium tier, no ads",
@@ -106,11 +111,47 @@
     "Dedicated parent guide with cultural sensitivity",
     "Works for ages 6 to 21+"
   ],
-  "keywords": "MyCareerLens, free career test India, career test Indian students, free career assessment, career guidance India, RIASEC test India, career exploration tool free, career counselling free students",
+  "keywords": "MyCareerLens, free career test India, career test Indian students, free career assessment, career guidance India, RIASEC test India, career exploration tool free, career counselling free students, career options after 10th, career options after 12th, stream selection after 10th, career margdarshan, sahi disha career guidance, MH-CET career guidance, WBJEE career guidance, JEE NEET CUET career counselling, state board career guidance",
   "potentialAction": {
     "@type": "UseAction",
     "target": "https://rajantonapeai.github.io/mycareerlens/"
   }
+}
+</script>
+
+<!-- ============================================================
+     PERSON ENTITY (publisher / creator / author of MyCareerLens)
+     Defined once here with @id, then referenced from WebApplication,
+     FAQPage and HowTo via that @id. Strongest E-E-A-T pattern.
+     ============================================================ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": "https://rajantonapeai.github.io/mycareerlens/#rajan-tonape",
+  "name": "Mr. Rajan Tonape",
+  "givenName": "Rajan",
+  "familyName": "Tonape",
+  "honorificPrefix": "Mr.",
+  "description": "Visionary for Young India — independent creator of MyCareerLens, a free career exploration tool for Indian students aged 6 to 21+.",
+  "jobTitle": "Founder & Creator, MyCareerLens",
+  "knowsAbout": [
+    "Career Guidance for Indian Students",
+    "Indian Education System (Class 10, Class 12, Stream Selection)",
+    "Indian Entrance Exams (JEE, NEET, CUET, UPSC, CLAT, MH-CET, WBJEE)",
+    "Psychometric Assessment",
+    "RIASEC Holland Code Theory",
+    "Big Five Personality Model",
+    "Multiple Intelligences Framework",
+    "Career Margdarshan and Sahi Disha for Indian Students"
+  ],
+  "knowsLanguage": ["en-IN"],
+  "nationality": "Indian",
+  "url": "https://rajantonapeai.github.io/mycareerlens/",
+  "sameAs": [
+    "https://github.com/rajantonapeai",
+    "https://www.linkedin.com/in/YOUR_LINKEDIN_PROFILE_HERE"
+  ]
 }
 </script>
 
@@ -123,6 +164,11 @@
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
+  "@id": "https://rajantonapeai.github.io/mycareerlens/#faq",
+  "inLanguage": "en-IN",
+  "dateModified": "2026-04-26",
+  "author": { "@id": "https://rajantonapeai.github.io/mycareerlens/#rajan-tonape" },
+  "publisher": { "@id": "https://rajantonapeai.github.io/mycareerlens/#rajan-tonape" },
   "mainEntity": [
     {
       "@type": "Question",
@@ -187,6 +233,62 @@
         "@type": "Answer",
         "text": "No. MyCareerLens has no account system, no login, no email collection, and no signup. Open the page, take the assessment, see results — all without giving any personal information."
       }
+    }
+  ]
+}
+</script>
+
+<!-- ============================================================
+     HOWTO SCHEMA — eligible for Google "step-by-step" rich result.
+     Describes the 4-step user journey through MyCareerLens.
+     ============================================================ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "@id": "https://rajantonapeai.github.io/mycareerlens/#how-to-take-the-test",
+  "name": "How to take a free career test on MyCareerLens",
+  "description": "A 4-step guide to using MyCareerLens — a free, no-signup career exploration tool for Indian students aged 6 to 21+, mapped to 156 careers across 17 sectors of the Indian economy.",
+  "inLanguage": "en-IN",
+  "totalTime": "PT20M",
+  "estimatedCost": {
+    "@type": "MonetaryAmount",
+    "currency": "INR",
+    "value": "0"
+  },
+  "author": { "@id": "https://rajantonapeai.github.io/mycareerlens/#rajan-tonape" },
+  "publisher": { "@id": "https://rajantonapeai.github.io/mycareerlens/#rajan-tonape" },
+  "supply": [
+    { "@type": "HowToSupply", "name": "A modern web browser with JavaScript enabled" },
+    { "@type": "HowToSupply", "name": "20-25 minutes of uninterrupted time" }
+  ],
+  "tool": [
+    { "@type": "HowToTool", "name": "MyCareerLens free career assessment" }
+  ],
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Choose your age band",
+      "text": "Select the age band that fits you: Child (6-13), Teen (14-17), or Young Adult (18-21+). The questions adapt to age-appropriate language and the career options shown match the choices realistically available at that life stage in India."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Answer the assessment honestly",
+      "text": "Work through the questions across five frameworks: Holland's RIASEC interest types, the Big Five personality model, Gardner's Multiple Intelligences, learning-style preferences, and Goleman's Emotional Intelligence. Answer based on what you actually enjoy or are good at — not what sounds impressive to others."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Review your career match results",
+      "text": "Get matched with careers from 156 options across 17 sectors of the Indian economy. Each career card shows the role description, required Indian education pathway (degrees, entrance exams like JEE / NEET / CUET / CLAT / state CETs, certifications), salary ranges in INR (entry / mid / senior), growth outlook, Class 10 stream alignment, and free learning resources."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Discuss results with parents or counsellors",
+      "text": "Treat the results as a starting point for conversation, not a final answer. Read the dedicated parent guide for cultural context, and use the suggested careers as a basis for further research, family discussion, and professional career counselling."
     }
   ]
 }
@@ -2917,7 +3019,27 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
     <p>For undergraduates considering specialisation, gap-year students re-evaluating direction, or recent graduates pivoting careers. The questions are more sophisticated, results more granular, and career suggestions cover both traditional and emerging paths in the Indian economy.</p>
 
     <h2 style="color:#0D7377;margin-top:2rem;">Career sectors covered</h2>
-    <p>MyCareerLens maps your profile to 156 careers across 17 sectors of the Indian economy. The sectors are: Healthcare and Medicine, Engineering and Technology, Information Technology and Software, Business and Finance, Law and Public Policy, Education and Research, Creative Arts and Media, Design and Architecture, Sciences and Research, Defence and Civil Services, Sports and Fitness, Hospitality and Tourism, Agriculture and Environment, Skilled Trades and Vocational, Performing Arts and Entertainment, Social Work and Development, and Entrepreneurship and Independent Practice. Each career card includes the role description, day-in-the-life, required education pathway in the Indian context (degrees, entrance exams, certifications), salary range in INR (entry / mid / senior), growth outlook (Hot / Stable / Slow / Declining), Class 10 stream alignment, and free learning resources.</p>
+    <p>MyCareerLens maps your profile to 156 careers across 17 sectors of the Indian economy. Useful for students searching <em>career options after 10th</em>, <em>career options after 12th</em>, <em>stream selection guidance</em>, or <em>career margdarshan</em> in the Indian context. The 17 sectors covered are:</p>
+    <ul>
+      <li><strong>Healthcare and Medicine:</strong> Doctor (MBBS), Dentist (BDS), Registered Nurse, Physiotherapist, Pharmacist (B.Pharm), Clinical Psychologist</li>
+      <li><strong>Engineering and Technology:</strong> Mechanical Engineer, Civil Engineer, Electrical Engineer, Electronics Engineer, Aerospace Engineer, Chemical Engineer</li>
+      <li><strong>Information Technology and Software:</strong> Software Engineer, Data Scientist, AI / ML Engineer, Cybersecurity Analyst, Cloud Architect, DevOps Engineer</li>
+      <li><strong>Business and Finance:</strong> Chartered Accountant (CA), Investment Banker, Financial Analyst, Management Consultant, HR Manager, Company Secretary (CS)</li>
+      <li><strong>Law and Public Policy:</strong> Corporate Counsel, Litigation Lawyer, Judge, Legal Researcher, Public Policy Analyst</li>
+      <li><strong>Education and Research:</strong> University Professor, School Teacher, Academic Researcher, Special Educator, Curriculum Designer</li>
+      <li><strong>Creative Arts and Media:</strong> Graphic Designer, Journalist, Content Creator, Filmmaker, Animator, Photographer</li>
+      <li><strong>Design and Architecture:</strong> Architect, Interior Designer, UX / UI Designer, Industrial Designer, Fashion Designer</li>
+      <li><strong>Sciences and Research:</strong> Research Scientist, Biotech Researcher, Astrophysicist, Chemist, Marine Biologist, Geologist</li>
+      <li><strong>Defence and Civil Services:</strong> IAS Officer, IPS Officer, IFS Officer (Foreign Service), Armed Forces Officer (NDA / CDS), State Civil Services</li>
+      <li><strong>Sports and Fitness:</strong> Professional Athlete, Sports Coach, Fitness Trainer, Sports Physiotherapist, Sports Psychologist</li>
+      <li><strong>Hospitality and Tourism:</strong> Hotel Manager, Chef, Travel Consultant, Event Manager, Cruise Professional</li>
+      <li><strong>Agriculture and Environment:</strong> Agricultural Scientist, Environmental Consultant, Forester, Horticulturist, Sustainability Analyst</li>
+      <li><strong>Skilled Trades and Vocational:</strong> Electrician (ITI), Plumber, Welder, Automotive Mechanic, CNC Operator (NSDC certified)</li>
+      <li><strong>Performing Arts and Entertainment:</strong> Actor, Musician, Classical Dancer, Theatre Artist, Sound Engineer</li>
+      <li><strong>Social Work and Development:</strong> NGO Professional, Social Worker, Counsellor, Rural Development Officer, Policy Researcher</li>
+      <li><strong>Entrepreneurship and Independent Practice:</strong> Startup Founder, Self-Employed Professional, Freelance Consultant, Family-Business Successor</li>
+    </ul>
+    <p>Each career card includes the role description, day-in-the-life, required education pathway in the Indian context (degrees, entrance exams such as JEE / NEET / CUET / CLAT / state CETs like MH-CET and WBJEE, certifications), salary range in INR (entry / mid / senior), growth outlook (Hot / Stable / Slow / Declining), Class 10 stream alignment, and free learning resources.</p>
 
     <h2 style="color:#0D7377;margin-top:2rem;">Glossary — terms used in MyCareerLens</h2>
 
