@@ -3160,9 +3160,10 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
              (SHOW_VISIT_COUNTER / SHOW_COMPLETION_COUNTER) are true. Silently invisible otherwise. -->
         <p id="landingCounters" class="hero-counters" style="display:none;text-align:center;font-size:0.9rem;color:var(--c-text-muted, #6b7280);margin-top:0.5rem;margin-bottom:0.5rem;" aria-live="polite"></p>
         <div class="cta-area">
-          <button class="btn btn-primary btn-large btn-pulse" id="ctaStart">Start Your Assessment →</button>
+          <!-- P1 improvement (2026-05-10): Quick Exploration promoted to primary CTA. Full Assessment remains available as secondary link. -->
+          <button class="btn btn-primary btn-large btn-pulse" id="ctaStart">Start Quick Exploration → <span style="display:block;font-weight:normal;font-size:0.85em;opacity:0.85;margin-top:2px;">10 min · 20 questions</span></button>
           <a href="#" class="cta-secondary hidden" id="ctaHistory">View Previous Results</a>
-          <a href="#" class="cta-secondary" id="ctaQuick">Short on time? Try the Quick Exploration (10 min, 20 questions)</a>
+          <a href="#" class="cta-secondary" id="ctaQuick">Want more depth? Try the Full Assessment (60–75 questions, 20–40 min)</a>
           <p class="hero-calibration">A simple career exploration tool — not a formal test or professional assessment. A starting point for thinking about career directions; it doesn't predict your future or guarantee outcomes.</p>
         </div>
       </div>
@@ -14195,9 +14196,9 @@ function renderProfileWizard() {
     const isHigher = ["Class 11", "Class 12", "Undergraduate", "Gap Year"].includes(p.classGrade);
     body.innerHTML = `
       <div class="field">
-        <label class="label" for="pf-board">School Board / Curriculum <span class="req">*</span></label>
+        <label class="label" for="pf-board">School Board / Curriculum <span style="font-weight:normal;font-size:var(--fs-xs);color:var(--text-muted);">(optional)</span></label>
         <select class="select" id="pf-board">
-          <option value="">Select board</option>
+          <option value="">Not sure / Other</option>
           ${BOARDS.map(b => `<option value="${b}" ${p.board === b ? "selected" : ""}>${b}</option>`).join("")}
         </select>
         <div class="error-msg hidden" id="err-pf-board"></div>
@@ -14231,16 +14232,16 @@ function renderProfileWizard() {
   } else {
     body.innerHTML = `
       <div class="field">
-        <label class="label" for="pf-state">State <span class="req">*</span></label>
+        <label class="label" for="pf-state">State <span style="font-weight:normal;font-size:var(--fs-xs);color:var(--text-muted);">(optional)</span></label>
         <select class="select" id="pf-state">
-          <option value="">Select state</option>
+          <option value="">Prefer not to say</option>
           ${STATES.map(s => `<option value="${s}" ${p.state === s ? "selected" : ""}>${s}</option>`).join("")}
         </select>
         <div class="error-msg hidden" id="err-pf-state"></div>
       </div>
       <div class="field">
-        <label class="label" for="pf-parent">Parent / Guardian Name <span class="req">*</span></label>
-        <input class="input" id="pf-parent" type="text" value="${escapeHtml(p.parentName || "")}" placeholder="For report header" maxlength="50">
+        <label class="label" for="pf-parent">Parent / Guardian Name <span style="font-weight:normal;font-size:var(--fs-xs);color:var(--text-muted);">(optional)</span></label>
+        <input class="input" id="pf-parent" type="text" value="${escapeHtml(p.parentName || "")}" placeholder="Optional — appears on the report if you fill it in" maxlength="50">
         <div class="error-msg hidden" id="err-pf-parent"></div>
       </div>
       <div class="field">
@@ -14397,13 +14398,17 @@ function validateStep(step) {
     if (!p.age) { showError("pf-age", "Age is required"); valid = false; }
     if (!p.classGrade) { showError("pf-class", "Class is required"); valid = false; }
   } else if (step === 2) {
-    if (!p.board) { showError("pf-board", "Board is required"); valid = false; }
+    // P1 improvement (2026-05-10): Board is now optional — empty value treated as "Not sure / Other".
+    // Stream remains required for Class 11+ since it directly drives stream-alignment scoring.
     const isHigher = ["Class 11", "Class 12", "Undergraduate", "Gap Year"].includes(p.classGrade);
     if (isHigher && !p.stream) { showError("pf-stream", "Stream is required"); valid = false; }
   } else if (step === 3) {
-    if (!p.state) { showError("pf-state", "State is required"); valid = false; }
-    const parentErr = validateName(p.parentName);
-    if (parentErr) { showError("pf-parent", parentErr); valid = false; }
+    // P1 improvement (2026-05-10): State is now optional — empty value treated as "Prefer not to say".
+    // P1 improvement (2026-05-10): Parent name is optional. If provided, validate format softly without blocking.
+    if (p.parentName && p.parentName.trim().length > 0) {
+      const parentErr = validateName(p.parentName);
+      if (parentErr) { showError("pf-parent", parentErr); valid = false; }
+    }
   }
   return valid;
 }
@@ -14497,6 +14502,10 @@ function renderQuestionWizardShell() {
     State.session.shownBreaks = State.session.shownBreaks || [];
     saveSession();
   }
+
+  // Owner-stats addition (2026-05-10): increment the public "starts" counter once per session.
+  // Fire-and-forget — failure is silent, never blocks rendering. Displayed only via owner bookmarklet.
+  maybeIncrementStartCounter();
 
   const idx = State.session.currentQuestionIndex || 0;
   const total = State.session.questionOrder.length;
@@ -15159,10 +15168,14 @@ const COUNTER_API_BASE = "https://abacus.jasoncameron.dev";
 const COUNTER_NAMESPACE = "mycareerlens-prod";
 const COUNTER_KEY_VISITS = "visits";
 const COUNTER_KEY_COMPLETIONS = "completions";
+// Owner-stats addition (2026-05-10): track "started but didn't complete" — tracked publicly via Abacus,
+// displayed only via owner bookmarklet (no UI in public site). Privacy posture unchanged: still anonymous integers.
+const COUNTER_KEY_STARTS = "starts";
 
 // localStorage keys for anti-double-count flags
 const COUNTER_LS_VISIT_TS = "careerlens_v4_lastvisit";  // timestamp of last visit increment (24h cooldown)
 const COUNTER_LS_COMPLETION_DONE = "careerlens_v4_completion_counted";  // flag once a completion has been counted
+const COUNTER_LS_START_DONE = "careerlens_v4_start_counted";  // flag once a start has been counted (per session startedAt)
 const COUNTER_VISIT_COOLDOWN_MS = 24 * 60 * 60 * 1000;  // 24 hours
 
 // In-memory cache to avoid redundant API calls within a single page session
@@ -15278,6 +15291,32 @@ async function maybeIncrementCompletionCounter() {
 }
 
 /**
+ * Start increment — fires at most once per session when user reaches the question wizard.
+ * Owner-stats addition (2026-05-10). Counts users who began the assessment but may not have finished.
+ * Uses the session.startedAt timestamp as a unique fingerprint, same anti-double-count pattern as completion counter.
+ * Public site never displays this counter — it is read only via the owner bookmarklet.
+ */
+async function maybeIncrementStartCounter() {
+  if (!COUNTERS_ENABLED) return null;
+  try {
+    const startedAt = State.session && State.session.startedAt;
+    if (!startedAt) return null;
+    const flagKey = COUNTER_LS_START_DONE + "_" + startedAt;
+    if (storageGet(flagKey)) {
+      // Already counted this start (e.g. user re-entered the question wizard after going back)
+      return null;
+    }
+    const newValue = await incrementCounter(COUNTER_KEY_STARTS);
+    if (newValue !== null) {
+      try { localStorage.setItem(flagKey, "1"); } catch (e) {}
+    }
+    return newValue;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
  * Format a number with thousands separator (Indian-friendly: en-IN locale).
  * @param {number} n
  * @returns {string}
@@ -15307,11 +15346,12 @@ function renderCounters() {
       landingEl.style.display = "none";
     } else {
       const parts = [];
+      // P1 improvement (2026-05-10): rephrased to remove the implicit drop-off framing.
       if (SHOW_VISIT_COUNTER && _counterCache.visits !== null) {
-        parts.push(`<strong>${formatCounterValue(_counterCache.visits)}</strong> students explored`);
+        parts.push(`<strong>${formatCounterValue(_counterCache.visits)}</strong> students have visited MyCareerLens`);
       }
       if (SHOW_COMPLETION_COUNTER && _counterCache.completions !== null) {
-        parts.push(`<strong>${formatCounterValue(_counterCache.completions)}</strong> finished`);
+        parts.push(`<strong>${formatCounterValue(_counterCache.completions)}</strong> have completed their assessment`);
       }
       if (parts.length) {
         landingEl.innerHTML = parts.join(" · ");
@@ -15471,8 +15511,10 @@ function initAccessibilityControls() {
    ============================================================ */
 
 function initLanding() {
-  document.getElementById("ctaStart").onclick = () => startAssessment("full");
-  document.getElementById("ctaQuick").onclick = (e) => { e.preventDefault(); startAssessment("quick"); };
+  // P1 improvement (2026-05-10): primary CTA now starts Quick Exploration; secondary link starts Full Assessment.
+  // IDs intentionally preserved (ctaStart / ctaQuick) to avoid breaking any external selectors.
+  document.getElementById("ctaStart").onclick = () => startAssessment("quick");
+  document.getElementById("ctaQuick").onclick = (e) => { e.preventDefault(); startAssessment("full"); };
   document.getElementById("ctaHistory").onclick = (e) => { e.preventDefault(); showHistoryModal(); };
 
   // Footer "About CareerLens" link — wired here since initLanding runs once on load
