@@ -16036,10 +16036,24 @@ async function initCounters() {
  */
 function buildAssessmentSummary() {
   const session = (typeof State !== "undefined") ? State.session : null;
-  if (!session) {
+  if (!session || !session.answers) {
     return {
-      textBlock: "Assessment summary: not available (feedback submitted before assessment completion).",
-      fields: { summary_status: "no_assessment_completed" },
+      textBlock: "Assessment summary: not available (feedback submitted without an active assessment).",
+      fields: { summary_status: "no_assessment" },
+      hasData: false
+    };
+  }
+  // 2026-05-10 (refined): hinge on the app's canonical session.completed flag,
+  // not on answer count. This makes feedback behavior identical whether opened
+  // from the landing page or end page AFTER completion (full summary attached),
+  // and identical (no summary, lighter modal copy) whenever the assessment has
+  // not been completed — landing page or mid-assessment, regardless of how many
+  // questions have been answered. Matches the gating pattern used elsewhere
+  // in the app (e.g., canShowResults).
+  if (!session.completed) {
+    return {
+      textBlock: "Assessment summary: not available (assessment not yet completed).",
+      fields: { summary_status: "assessment_not_completed" },
       hasData: false
     };
   }
@@ -16241,6 +16255,37 @@ function showFeedbackModal() {
   const profile = State.profile || (State.session && State.session.profile) || {};
   const presetName = (profile.studentName || "").split(" ")[0] || "";
 
+  // 2026-05-10: detect whether assessment has produced enough data to summarize.
+  // If yes, modal mentions the summary attachment + uses full privacy disclosure.
+  // If no (landing-page feedback or mid-assessment with <5 answers), modal hides
+  // the "Includes:" line and uses a lighter privacy note that does not promise
+  // a summary that won't actually be sent.
+  let summaryAvailable = false;
+  try { summaryAvailable = !!(buildAssessmentSummary().hasData); }
+  catch (e) { summaryAvailable = false; }
+
+  const includesLineHtml = summaryAvailable ? `
+      <div class="feedback-includes">
+        <strong>Includes:</strong> your feedback + a summary of your assessment
+        (archetype, top 5 careers, RIASEC + Big Five percentiles, profile).
+      </div>` : "";
+
+  const privacyNoteHtml = summaryAvailable ? `
+      <p class="feedback-privacy-note">
+        Your raw assessment answers stay on your device. When you submit feedback, a summary
+        of your results (archetype, top career matches, scores, profile) is shared along with it
+        so Rajan can review feedback alongside the assessment for accuracy and continuous improvement.
+        Sent via FormSubmit.co (no data storage). If that service is unreachable, the form falls back
+        to opening your email app instead. No tracking, no signup. If you provide your email, Rajan may
+        write back personally; otherwise no follow-up happens.
+      </p>` : `
+      <p class="feedback-privacy-note">
+        Only what you type above is sent — directly to Rajan via FormSubmit.co (no data storage).
+        If that service is unreachable, the form falls back to opening your email app instead.
+        No tracking, no signup. If you provide your email, Rajan may write back personally; otherwise
+        no follow-up happens.
+      </p>`;
+
   const ratingsHtml = FEEDBACK_RATINGS.map(r =>
     `<button type="button" class="feedback-rating-btn" data-rating="${r.value}" aria-pressed="false">
        <span class="feedback-rating-emoji">${r.emoji}</span>
@@ -16293,20 +16338,7 @@ function showFeedbackModal() {
         style="position:absolute;left:-9999px;height:0;width:0;opacity:0;" aria-hidden="true">
 
       <div class="feedback-status" id="feedback-status" role="status" aria-live="polite"></div>
-
-      <div class="feedback-includes">
-        <strong>Includes:</strong> your feedback + a summary of your assessment
-        (archetype, top 5 careers, RIASEC + Big Five percentiles, profile).
-      </div>
-
-      <p class="feedback-privacy-note">
-        Your raw assessment answers stay on your device. When you submit feedback, a summary
-        of your results (archetype, top career matches, scores, profile) is shared along with it
-        so Rajan can review feedback alongside the assessment for accuracy and continuous improvement.
-        Sent via FormSubmit.co (no data storage). If that service is unreachable, the form falls back
-        to opening your email app instead. No tracking, no signup. If you provide your email, Rajan may
-        write back personally; otherwise no follow-up happens.
-      </p>
+${includesLineHtml}${privacyNoteHtml}
     </div>`;
 
   showModal({
