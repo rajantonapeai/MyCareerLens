@@ -979,23 +979,28 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
   font-size: 0.85em;
 }
 .feedback-rating-row {
-  display: flex;
+  /* 2026-05-10: grid auto-wrap so 5 buttons fit gracefully on any screen.
+     Desktop: 5 in a row · Tablet: 3-4 in a row · Phone: 2-3 in a row */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
   gap: var(--sp-2);
-  flex-wrap: wrap;
 }
 .feedback-rating-btn {
-  flex: 1 1 100px;
-  min-width: 100px;
-  padding: var(--sp-3);
+  padding: var(--sp-2) var(--sp-2);
   background: white;
   border: 2px solid var(--border-soft);
   border-radius: 8px;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-align: center;
   transition: all var(--dur-base) var(--ease);
   color: var(--text-primary);
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 .feedback-rating-btn:hover {
   border-color: var(--primary);
@@ -1408,6 +1413,12 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
   padding: var(--sp-4);
 }
 .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+/* 2026-05-10: restructured for sticky action footer.
+   Modal is now a flex column. Title and actions are fixed at top/bottom;
+   only the body scrolls when content exceeds viewport. Submit button is
+   always visible without scrolling — a known UX issue with content-heavy
+   modals (feedback, About, Glossary). Universal improvement, no change to
+   modal API. */
 .modal {
   max-width: 480px; width: 100%;
   padding: var(--sp-6);
@@ -1418,25 +1429,41 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
   transform: scale(0.95);
   transition: transform var(--dur-base) var(--ease);
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  /* overflow handled by .modal-body, not the modal itself */
 }
 .modal-backdrop.open .modal { transform: scale(1); }
 .modal-title {
   font-size: var(--fs-2xl);
   margin-bottom: var(--sp-3);
+  flex-shrink: 0;  /* never compress the title */
 }
 .modal-body {
   font-size: var(--fs-md);
   color: var(--text-secondary);
-  margin-bottom: var(--sp-5);
+  margin-bottom: var(--sp-4);
   line-height: 1.6;
+  flex: 1 1 auto;       /* grow to fill remaining space */
+  overflow-y: auto;     /* scroll inside body when content is tall */
+  min-height: 0;        /* required for flex-overflow scrolling */
+  -webkit-overflow-scrolling: touch;
 }
 .modal-actions {
   display: flex;
   gap: var(--sp-3);
   flex-wrap: wrap;
+  flex-shrink: 0;       /* always visible; never compressed */
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border-soft);
 }
 .modal-actions .btn { flex: 1; min-width: 120px; }
+
+/* On narrow screens, give modal more breathing room and reduce padding */
+@media (max-width: 480px) {
+  .modal { padding: var(--sp-4); max-height: 92vh; }
+  .modal-actions .btn { min-width: 0; }
+}
 
 /* -- MODAL (wide variant for content-heavy modals like About) */
 .modal--wide { max-width: 720px; }
@@ -16036,10 +16063,15 @@ function sendFeedbackToRajan(prefilledBody, subjectOverride) {
    To disable in-app submission and revert to mailto-only, set FEEDBACK_ENDPOINT = "" below.
    ============================================================ */
 const FEEDBACK_ENDPOINT = "https://formsubmit.co/ajax/" + encodeURIComponent("rajantonapeai@gmail.com");
+// 5-point industry-standard scale (2026-05-10).
+// Equidistant labels with clear emotional gradient via emojis.
+// Order: most positive → least positive (left-to-right or top-to-bottom).
 const FEEDBACK_RATINGS = [
-  { value: "good",    emoji: "👍", label: "Good" },
-  { value: "mixed",   emoji: "🤷", label: "Mixed" },
-  { value: "notgreat",emoji: "👎", label: "Not great" }
+  { value: "excellent", emoji: "🤩", label: "Excellent" },
+  { value: "verygood",  emoji: "😊", label: "Very Good" },
+  { value: "good",      emoji: "🙂", label: "Good" },
+  { value: "fair",      emoji: "😐", label: "Fair" },
+  { value: "poor",      emoji: "😞", label: "Poor" }
 ];
 
 let _feedbackSelectedRating = null;
