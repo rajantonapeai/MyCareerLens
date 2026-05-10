@@ -1080,6 +1080,19 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
   color: var(--text-muted);
   line-height: 1.5;
 }
+.feedback-includes {
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: rgba(13, 115, 119, 0.06);
+  border-left: 3px solid rgba(13, 115, 119, 0.4);
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.85rem;
+  color: var(--text-default, #333);
+  line-height: 1.5;
+}
+.feedback-includes strong {
+  color: #0D7377;
+}
 
 /* Phase 6: subtle expectation-setting note on landing page. Small, muted,
    below CTA — does not compete visually with the Start button but is visible
@@ -16007,6 +16020,134 @@ async function initCounters() {
  * Includes a single-line context footer (age group, mode, timestamp) the user can also remove.
  * @returns {{ subject: string, body: string }}
  */
+/**
+ * Build a structured assessment summary for feedback validation (added 2026-05-10).
+ * Used by submitFeedback to attach context to the FormSubmit payload, and by
+ * buildFeedbackEmail for the mailto fallback. The user explicitly opts in by
+ * submitting feedback — disclosure shown in the modal privacy note.
+ *
+ * Defensive: returns safe defaults (and a "no assessment" note) if any data
+ * computation fails (e.g., user submits feedback before completing assessment).
+ *
+ * Returns { textBlock, fields, hasData }.
+ *  - textBlock : human-readable text for email/mailto bodies
+ *  - fields    : flat object of fields suitable for FormSubmit JSON payload
+ *  - hasData   : true if a meaningful summary was generated
+ */
+function buildAssessmentSummary() {
+  const session = (typeof State !== "undefined") ? State.session : null;
+  if (!session) {
+    return {
+      textBlock: "Assessment summary: not available (feedback submitted before assessment completion).",
+      fields: { summary_status: "no_assessment_completed" },
+      hasData: false
+    };
+  }
+
+  const profile = (State.profile) || (session.profile) || {};
+  const ageGroup = State.ageGroup || session.ageGroup || "";
+  const ageLabel = (typeof GROUP_LABELS !== "undefined" && GROUP_LABELS[ageGroup]) || ageGroup || "—";
+  const modeLabel = State.assessmentMode === "quick" ? "Quick" : "Full";
+
+  let student = null, archetype = null, matches = [];
+  let percentiles = {};
+
+  try { student = _buildPrintStudent(session); percentiles = (student && student.percentiles) || {}; }
+  catch (e) { console.warn("Summary: student build failed", e); }
+
+  try { if (student) archetype = assignArchetype(student); }
+  catch (e) { console.warn("Summary: archetype assign failed", e); }
+
+  try {
+    const matchResult = computeCareerMatches(session);
+    matches = ((matchResult && matchResult.matches) ? matchResult.matches : [])
+      .filter(m => m && typeof m.name === "string" && m.name.length > 0)
+      .slice(0, 5);
+  } catch (e) { console.warn("Summary: match compute failed", e); }
+
+  const studentName = (profile.studentName || "").toString().trim();
+  const classGrade  = (profile.classGrade  || "").toString().trim();
+  const board       = (profile.board       || "").toString().trim();
+  const stream      = (profile.stream      || "").toString().trim();
+
+  const profileParts = [];
+  if (studentName) profileParts.push(studentName);
+  else profileParts.push("(name not provided)");
+  if (classGrade) profileParts.push("Class " + classGrade);
+  if (board) profileParts.push(board);
+  if (stream) profileParts.push(stream);
+  const profileLine = profileParts.join(" · ");
+
+  const archetypeName = archetype && archetype.name ? archetype.name : "(unavailable)";
+  const archetypeDesc = archetype && archetype.description ? archetype.description : "";
+  const archetypeLine = archetypeDesc ? archetypeName + " — " + archetypeDesc : archetypeName;
+  const hollandCode = student && student.hollandCode ? student.hollandCode : "—";
+
+  const fmtPct = (k) => {
+    const v = percentiles[k];
+    return (typeof v === "number" && isFinite(v)) ? Math.round(v) + "%" : "—";
+  };
+
+  const RIASEC = [
+    ["R", "Realistic"], ["I", "Investigative"], ["A", "Artistic"],
+    ["S", "Social"], ["E", "Enterprising"], ["C", "Conventional"]
+  ];
+  const BIGFIVE = [
+    ["openness", "Openness"], ["conscientiousness", "Conscientiousness"],
+    ["extraversion", "Extraversion"], ["agreeableness", "Agreeableness"],
+    ["emotionalStability", "Emotional Stability"]
+  ];
+
+  const riasecLines  = RIASEC.map(p => "  " + p[1] + ": " + fmtPct(p[0])).join("\n");
+  const bigfiveLines = BIGFIVE.map(p => "  " + p[1] + ": " + fmtPct(p[0])).join("\n");
+
+  const matchLines = matches.length > 0
+    ? matches.map((m, i) => "  " + (i + 1) + ". " + m.name + " — " + Math.round(m.matchScore || 0) + "%").join("\n")
+    : "  (no career matches available)";
+
+  const streamKey = student && student.streamKey;
+  let streamAlignmentLine;
+  if (matches.length === 0) {
+    streamAlignmentLine = "  (no top match)";
+  } else if (!streamKey) {
+    streamAlignmentLine = "  " + matches[0].name + " — student has not selected a stream yet";
+  } else if (matches[0].streamAlignment && matches[0].streamAlignment[streamKey]) {
+    streamAlignmentLine = "  " + matches[0].name + " · " + (stream || streamKey) + ": " + matches[0].streamAlignment[streamKey];
+  } else {
+    streamAlignmentLine = "  " + matches[0].name + " · " + (stream || streamKey) + ": (not specified for this stream)";
+  }
+
+  const textBlock =
+    "═══ Assessment Summary ═══\n" +
+    "Profile: " + profileLine + "\n" +
+    "Age group: " + ageLabel + " · Mode: " + modeLabel + "\n" +
+    "Archetype: " + archetypeLine + "\n" +
+    "Holland code: " + hollandCode + "\n\n" +
+    "RIASEC percentiles:\n" + riasecLines + "\n\n" +
+    "Big Five percentiles:\n" + bigfiveLines + "\n\n" +
+    "Top 5 career matches:\n" + matchLines + "\n\n" +
+    "Stream alignment for top match:\n" + streamAlignmentLine + "\n";
+
+  const riasecInline  = RIASEC.map(p => p[1] + " " + fmtPct(p[0])).join(", ");
+  const bigfiveInline = BIGFIVE.map(p => p[1] + " " + fmtPct(p[0])).join(", ");
+  const top5Inline = matches.length > 0
+    ? matches.map((m, i) => (i + 1) + ". " + m.name + " (" + Math.round(m.matchScore || 0) + "%)").join("; ")
+    : "(none)";
+
+  const fields = {
+    summary_profile: profileLine,
+    summary_age_mode: ageLabel + " · " + modeLabel + " mode",
+    summary_archetype: archetypeName,
+    summary_holland_code: hollandCode,
+    summary_riasec: riasecInline,
+    summary_bigfive: bigfiveInline,
+    summary_top5_careers: top5Inline,
+    summary_top_match_stream_fit: streamAlignmentLine.trim()
+  };
+
+  return { textBlock: textBlock, fields: fields, hasData: true };
+}
+
 function buildFeedbackEmail() {
   const p = (State.session && State.session.profile) || State.profile || {};
   const firstName = (p.studentName || "").split(" ")[0];
@@ -16039,7 +16180,10 @@ function buildFeedbackEmail() {
     (firstName ? `— ${firstName}\n` : "") +
     (email ? `Reply to: ${email}\n\n` : (firstName ? "\n" : "\n")) +
     "—\n" +
-    `Context: ${ageLabel} · ${modeLabel} mode · ${ts}\n`;
+    `Context: ${ageLabel} · ${modeLabel} mode · ${ts}\n\n` +
+    // 2026-05-10: include assessment summary so feedback can be validated against
+    // actual results. Privacy disclosure is shown in the feedback modal before submit.
+    buildAssessmentSummary().textBlock;
 
   return { subject, body };
 }
@@ -16150,12 +16294,18 @@ function showFeedbackModal() {
 
       <div class="feedback-status" id="feedback-status" role="status" aria-live="polite"></div>
 
+      <div class="feedback-includes">
+        <strong>Includes:</strong> your feedback + a summary of your assessment
+        (archetype, top 5 careers, RIASEC + Big Five percentiles, profile).
+      </div>
+
       <p class="feedback-privacy-note">
-        Your assessment answers and results never leave your device. Only what you type above is sent —
-        directly to Rajan via a small form-forwarding service (FormSubmit.co), which does not store data.
-        If that service is unreachable, the form falls back to opening your email app instead.
-        No tracking, no signup. If you provide your email, Rajan may write back personally to thank you
-        or ask a follow-up question; otherwise no follow-up happens.
+        Your raw assessment answers stay on your device. When you submit feedback, a summary
+        of your results (archetype, top career matches, scores, profile) is shared along with it
+        so Rajan can review feedback alongside the assessment for accuracy and continuous improvement.
+        Sent via FormSubmit.co (no data storage). If that service is unreachable, the form falls back
+        to opening your email app instead. No tracking, no signup. If you provide your email, Rajan may
+        write back personally; otherwise no follow-up happens.
       </p>
     </div>`;
 
@@ -16253,6 +16403,12 @@ async function submitFeedback() {
     ? `MyCareerLens feedback from ${name}`
     : "MyCareerLens feedback";
 
+  // 2026-05-10: assessment summary attached so feedback can be validated against
+  // actual results. User opts in by submitting feedback — disclosure visible in modal.
+  const summaryResult = buildAssessmentSummary();
+  const summaryText = summaryResult.textBlock;
+  const summaryFields = summaryResult.fields || {};
+
   const body =
     "Hi Rajan,\n\n" +
     (rating ? `Overall reaction: ${ratingLabel}\n\n` : "") +
@@ -16260,7 +16416,8 @@ async function submitFeedback() {
     (name ? `— ${name}\n` : "") +
     (email ? `Reply to: ${email}\n\n` : (name ? "\n" : "")) +
     "—\n" +
-    `Context: ${ageLabel} · ${modeLabel} mode · ${ts}\n`;
+    `Context: ${ageLabel} · ${modeLabel} mode · ${ts}\n\n` +
+    summaryText;
 
   // Sending state
   statusEl.className = "feedback-status sending";
@@ -16271,21 +16428,22 @@ async function submitFeedback() {
     try {
       const ctrl = new AbortController();
       const timeout = setTimeout(() => ctrl.abort(), 8000);
+      const payload = Object.assign({
+        _subject: subject,
+        _template: "table",
+        _captcha: "false",
+        _replyto: email || "",  // FormSubmit sets Reply-To header so Gmail "Reply" goes to user
+        name: name || "(anonymous)",
+        email: email || "(not provided)",
+        rating: ratingLabel,
+        feedback: comment,
+        context: ageLabel + " · " + modeLabel + " mode · " + ts
+      }, summaryFields);
       const resp = await fetch(FEEDBACK_ENDPOINT, {
         method: "POST",
         signal: ctrl.signal,
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({
-          _subject: subject,
-          _template: "table",
-          _captcha: "false",
-          _replyto: email || "",  // FormSubmit sets Reply-To header so Gmail "Reply" goes to user
-          name: name || "(anonymous)",
-          email: email || "(not provided)",
-          rating: ratingLabel,
-          feedback: comment,
-          context: ageLabel + " · " + modeLabel + " mode · " + ts
-        })
+        body: JSON.stringify(payload)
       });
       clearTimeout(timeout);
       if (resp.ok) {
