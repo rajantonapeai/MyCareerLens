@@ -16014,6 +16014,17 @@ function buildFeedbackEmail() {
   const modeLabel = State.assessmentMode === "quick" ? "Quick" : "Full";
   const ts = new Date().toLocaleString();
 
+  // 2026-05-10 update: email-aware. If feedback modal is open with a filled email field,
+  // include it in the body so Rajan can reply directly. Defensive fallback for any future
+  // code path that calls sendFeedbackToRajan without a prefilled body.
+  let email = "";
+  try {
+    const emailEl = document.getElementById("feedback-email");
+    if (emailEl && typeof emailEl.value === "string") {
+      email = emailEl.value.trim();
+    }
+  } catch (e) { /* DOM not available; email stays empty */ }
+
   const subject = firstName
     ? `MyCareerLens feedback from ${firstName}`
     : "MyCareerLens feedback";
@@ -16025,7 +16036,8 @@ function buildFeedbackEmail() {
     "• Was anything confusing or surprising?\n" +
     "• Anything you'd change?\n\n" +
     "(write your thoughts here — feel free to delete the prompts above)\n\n" +
-    (firstName ? `— ${firstName}\n\n` : "\n") +
+    (firstName ? `— ${firstName}\n` : "") +
+    (email ? `Reply to: ${email}\n\n` : (firstName ? "\n" : "\n")) +
     "—\n" +
     `Context: ${ageLabel} · ${modeLabel} mode · ${ts}\n`;
 
@@ -16124,6 +16136,14 @@ function showFeedbackModal() {
           value="${escapeHtml(presetName)}" maxlength="50" placeholder="e.g., Arya">
       </div>
 
+      <div class="feedback-field">
+        <label class="feedback-label" for="feedback-email">Your email
+          <span class="feedback-label-meta">(optional — only if you'd like a reply)</span>
+        </label>
+        <input type="email" id="feedback-email" class="feedback-name-input"
+          maxlength="100" placeholder="e.g., your@email.com" autocomplete="email">
+      </div>
+
       <!-- Honeypot field, hidden from humans, bots fill it. Submission rejected if filled. -->
       <input type="text" id="feedback-website" tabindex="-1" autocomplete="off"
         style="position:absolute;left:-9999px;height:0;width:0;opacity:0;" aria-hidden="true">
@@ -16134,7 +16154,8 @@ function showFeedbackModal() {
         Your assessment answers and results never leave your device. Only what you type above is sent —
         directly to Rajan via a small form-forwarding service (FormSubmit.co), which does not store data.
         If that service is unreachable, the form falls back to opening your email app instead.
-        No tracking, no signup, no follow-up unless you provide a name and want one.
+        No tracking, no signup. If you provide your email, Rajan may write back personally to thank you
+        or ask a follow-up question; otherwise no follow-up happens.
       </p>
     </div>`;
 
@@ -16181,6 +16202,7 @@ function showFeedbackModal() {
 async function submitFeedback() {
   const commentEl = document.getElementById("feedback-comment");
   const nameEl = document.getElementById("feedback-name");
+  const emailEl = document.getElementById("feedback-email");
   const honeypotEl = document.getElementById("feedback-website");
   const statusEl = document.getElementById("feedback-status");
 
@@ -16188,8 +16210,20 @@ async function submitFeedback() {
 
   const comment = (commentEl.value || "").trim();
   const name = (nameEl ? nameEl.value : "").trim();
+  const email = (emailEl ? emailEl.value : "").trim();
   const honeypot = honeypotEl ? honeypotEl.value : "";
   const rating = _feedbackSelectedRating;
+
+  // Validate email format if user provided one — empty is fine (optional)
+  if (email.length > 0) {
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!EMAIL_RE.test(email)) {
+      statusEl.className = "feedback-status error";
+      statusEl.textContent = "That email doesn't look right. Please check the format or leave it empty.";
+      if (emailEl) emailEl.focus();
+      return;
+    }
+  }
 
   // Validation
   if (comment.length < 3) {
@@ -16223,7 +16257,8 @@ async function submitFeedback() {
     "Hi Rajan,\n\n" +
     (rating ? `Overall reaction: ${ratingLabel}\n\n` : "") +
     comment + "\n\n" +
-    (name ? `— ${name}\n\n` : "") +
+    (name ? `— ${name}\n` : "") +
+    (email ? `Reply to: ${email}\n\n` : (name ? "\n" : "")) +
     "—\n" +
     `Context: ${ageLabel} · ${modeLabel} mode · ${ts}\n`;
 
@@ -16244,7 +16279,9 @@ async function submitFeedback() {
           _subject: subject,
           _template: "table",
           _captcha: "false",
+          _replyto: email || "",  // FormSubmit sets Reply-To header so Gmail "Reply" goes to user
           name: name || "(anonymous)",
+          email: email || "(not provided)",
           rating: ratingLabel,
           feedback: comment,
           context: ageLabel + " · " + modeLabel + " mode · " + ts
