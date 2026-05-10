@@ -18204,26 +18204,32 @@ let _printSavedDetailsState = [];
 let _printInjectedNodes = [];
 
 function setupPrintEnhancements() {
+  // 2026-05-10: removed defensive matchMedia listener — it caused _onBeforePrint to fire
+  // twice (once via beforeprint event, once via matchMedia change), which made Phase 4
+  // sections inject 2-3 times. The standard beforeprint/afterprint events are reliable
+  // in all modern browsers (Chrome, Edge, Firefox, Safari 9+). _onBeforePrint is also
+  // idempotent now (cleans prior injections at start), so even unexpected double-fire
+  // doesn't accumulate sections.
   window.addEventListener("beforeprint", _onBeforePrint);
   window.addEventListener("afterprint", _onAfterPrint);
-  // Some browsers (older Safari, some webview contexts) only fire matchMedia print.
-  // Defensive: also listen via matchMedia for the rare case beforeprint isn't dispatched.
-  try {
-    const mql = window.matchMedia("print");
-    if (mql && mql.addEventListener) {
-      mql.addEventListener("change", (e) => {
-        if (e.matches) _onBeforePrint();
-        else _onAfterPrint();
-      });
-    }
-  } catch (e) { /* ignore */ }
 }
 
 function _onBeforePrint() {
   try {
+    // 2026-05-10: idempotent guard — if a prior _onBeforePrint left injections behind
+    // (e.g., afterprint didn't fire, or this fires twice in a single print session),
+    // clean them up before re-injecting. Prevents duplicate cover/TOC/sections.
+    _printInjectedNodes.forEach((n) => {
+      try { if (n && n.parentNode) n.remove(); } catch (e) {}
+    });
+    _printInjectedNodes = [];
+    _printSavedDetailsState.forEach(({ el, wasOpen }) => {
+      try { el.open = wasOpen; } catch (e) {}
+    });
+    _printSavedDetailsState = [];
+
     // Step 1: force-expand all <details> accordions so career details, FAQ answers,
     // and other collapsible content actually print
-    _printSavedDetailsState = [];
     document.querySelectorAll("details").forEach((d) => {
       _printSavedDetailsState.push({ el: d, wasOpen: d.open });
       d.open = true;
