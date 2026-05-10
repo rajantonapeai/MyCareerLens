@@ -16035,6 +16035,7 @@ async function initCounters() {
  *  - hasData   : true if a meaningful summary was generated
  */
 function buildAssessmentSummary() {
+  const safe = (fn, fallback) => { try { return fn(); } catch (e) { return fallback; } };
   const session = (typeof State !== "undefined") ? State.session : null;
   if (!session || !session.answers) {
     return {
@@ -16043,13 +16044,6 @@ function buildAssessmentSummary() {
       hasData: false
     };
   }
-  // 2026-05-10 (refined): hinge on the app's canonical session.completed flag,
-  // not on answer count. This makes feedback behavior identical whether opened
-  // from the landing page or end page AFTER completion (full summary attached),
-  // and identical (no summary, lighter modal copy) whenever the assessment has
-  // not been completed — landing page or mid-assessment, regardless of how many
-  // questions have been answered. Matches the gating pattern used elsewhere
-  // in the app (e.g., canShowResults).
   if (!session.completed) {
     return {
       textBlock: "Assessment summary: not available (assessment not yet completed).",
@@ -16058,20 +16052,66 @@ function buildAssessmentSummary() {
     };
   }
 
+  // ===== Profile =====
   const profile = (State.profile) || (session.profile) || {};
+  const studentName = (profile.studentName || "").toString().trim();
+  const classGrade = (profile.classGrade || "").toString().trim();
+  const board = (profile.board || "").toString().trim();
+  const stream = (profile.stream || "").toString().trim();
+
+  // 2026-05-10: avoid "Class Class 9" — skip "Class " prefix if classGrade already starts with "Class".
+  const classDisplay = classGrade
+    ? (classGrade.toLowerCase().indexOf("class") === 0 ? classGrade : "Class " + classGrade)
+    : "";
+
+  const profileParts = [];
+  profileParts.push(studentName || "(name not provided)");
+  if (classDisplay) profileParts.push(classDisplay);
+  if (board) profileParts.push(board);
+  profileParts.push(stream || "(no stream selected)");
+  const profileLine = profileParts.join(" · ");
+
+  // ===== Metadata =====
   const ageGroup = State.ageGroup || session.ageGroup || "";
   const ageLabel = (typeof GROUP_LABELS !== "undefined" && GROUP_LABELS[ageGroup]) || ageGroup || "—";
-  const modeLabel = State.assessmentMode === "quick" ? "Quick" : "Full";
+  const isQuickMode = (State.assessmentMode === "quick") || (session.mode === "quick");
+  const modeLabel = isQuickMode ? "Quick" : "Full";
+  const completedAt = session.completedAt
+    ? new Date(session.completedAt).toLocaleString()
+    : "—";
 
-  let student = null, archetype = null, matches = [];
-  let percentiles = {};
+  // Question counts: total shown, "I'm not sure" count, meaningful answers
+  const NOT_SURE = (typeof ANSWER_UNKNOWN !== "undefined") ? ANSWER_UNKNOWN : "unknown";
+  let totalShown = 0, notSure = 0, meaningful = 0;
+  for (const v of Object.values(session.answers)) {
+    totalShown++;
+    if (v === NOT_SURE) notSure++;
+    else if (v != null) meaningful++;
+  }
 
-  try { student = _buildPrintStudent(session); percentiles = (student && student.percentiles) || {}; }
-  catch (e) { console.warn("Summary: student build failed", e); }
+  // ===== Compute scores =====
+  let student = null, percentiles = {};
+  try {
+    student = _buildPrintStudent(session);
+    percentiles = (student && student.percentiles) || {};
+  } catch (e) { console.warn("Summary: student build failed", e); }
 
-  try { if (student) archetype = assignArchetype(student); }
-  catch (e) { console.warn("Summary: archetype assign failed", e); }
+  // ===== Archetype top 3 =====
+  let archetypeTop1 = null, archetypeTop2 = null, archetypeTop3 = null;
+  try {
+    if (student && typeof ARCHETYPES !== "undefined" && typeof archetypeMatchPct === "function") {
+      const scored = ARCHETYPES
+        .filter(a => a && a.criteria !== null)
+        .map(a => ({ archetype: a, match: archetypeMatchPct(student, a) }))
+        .sort((a, b) => b.match - a.match);
+      if (scored.length >= 1) archetypeTop1 = scored[0];
+      if (scored.length >= 2) archetypeTop2 = scored[1];
+      if (scored.length >= 3) archetypeTop3 = scored[2];
+    }
+  } catch (e) { console.warn("Summary: archetype ranking failed", e); }
 
+  // ===== Career matches =====
+  let matches = [];
   try {
     const matchResult = computeCareerMatches(session);
     matches = ((matchResult && matchResult.matches) ? matchResult.matches : [])
@@ -16079,84 +16119,144 @@ function buildAssessmentSummary() {
       .slice(0, 5);
   } catch (e) { console.warn("Summary: match compute failed", e); }
 
-  const studentName = (profile.studentName || "").toString().trim();
-  const classGrade  = (profile.classGrade  || "").toString().trim();
-  const board       = (profile.board       || "").toString().trim();
-  const stream      = (profile.stream      || "").toString().trim();
+  // ===== Special detections =====
+  const giftedFlag = safe(function() { return detectGifted(percentiles); }, false);
+  const pathwayFlag = safe(function() {
+    if (!student || !student.streamKey || matches.length < 3) return false;
+    return detectPathwayInsight(matches, student.streamKey);
+  }, false);
 
-  const profileParts = [];
-  if (studentName) profileParts.push(studentName);
-  else profileParts.push("(name not provided)");
-  if (classGrade) profileParts.push("Class " + classGrade);
-  if (board) profileParts.push(board);
-  if (stream) profileParts.push(stream);
-  const profileLine = profileParts.join(" · ");
-
-  const archetypeName = archetype && archetype.name ? archetype.name : "(unavailable)";
-  const archetypeDesc = archetype && archetype.description ? archetype.description : "";
-  const archetypeLine = archetypeDesc ? archetypeName + " — " + archetypeDesc : archetypeName;
-  const hollandCode = student && student.hollandCode ? student.hollandCode : "—";
-
+  // ===== Helpers / constants =====
   const fmtPct = (k) => {
     const v = percentiles[k];
     return (typeof v === "number" && isFinite(v)) ? Math.round(v) + "%" : "—";
   };
+  const dimLabels = {
+    R: "Realistic", I: "Investigative", A: "Artistic", S: "Social", E: "Enterprising", C: "Conventional",
+    openness: "Openness", conscientiousness: "Conscientiousness", extraversion: "Extraversion",
+    agreeableness: "Agreeableness", emotionalStability: "Emotional Stability",
+    linguistic: "Linguistic", logicalMath: "Logical-Math", spatial: "Spatial",
+    bodilyKinesthetic: "Bodily-Kinesthetic", musical: "Musical",
+    interpersonal: "Interpersonal", intrapersonal: "Intrapersonal", naturalist: "Naturalist",
+    verbal: "Verbal", numerical: "Numerical", logical: "Logical Reasoning",
+    spatialApt: "Spatial Aptitude", clerical: "Attention to Detail", mechanical: "Mechanical",
+    selfAwareness: "Self-Awareness", selfRegulation: "Self-Regulation",
+    empathy: "Empathy", relationshipMgmt: "Relationship Mgmt",
+    creativity: "Creativity", leadership: "Leadership",
+    visual: "Visual", auditory: "Auditory", readWrite: "Read/Write", kinesthetic: "Kinesthetic",
+    valAchievement: "Achievement", valAutonomy: "Autonomy", valSecurity: "Security",
+    valSocialImpact: "Social Impact", valCreativity: "Creative Expression", valFinancial: "Financial"
+  };
+  const labelFor = (k) => dimLabels[k] || k;
 
-  const RIASEC = [
-    ["R", "Realistic"], ["I", "Investigative"], ["A", "Artistic"],
-    ["S", "Social"], ["E", "Enterprising"], ["C", "Conventional"]
-  ];
-  const BIGFIVE = [
-    ["openness", "Openness"], ["conscientiousness", "Conscientiousness"],
-    ["extraversion", "Extraversion"], ["agreeableness", "Agreeableness"],
-    ["emotionalStability", "Emotional Stability"]
-  ];
+  const RIASEC_KEYS  = ["R","I","A","S","E","C"];
+  const BIGFIVE_KEYS = ["openness","conscientiousness","extraversion","agreeableness","emotionalStability"];
+  const MI_KEYS      = ["linguistic","logicalMath","spatial","bodilyKinesthetic","musical","interpersonal","intrapersonal","naturalist"];
+  const APT_KEYS     = ["verbal","numerical","logical","spatialApt","clerical","mechanical"];
+  const EQ_KEYS      = ["selfAwareness","selfRegulation","empathy","relationshipMgmt"];
+  const VARK_KEYS    = ["visual","auditory","readWrite","kinesthetic"];
+  const VALUES_KEYS  = ["valAchievement","valAutonomy","valSecurity","valSocialImpact","valCreativity","valFinancial"];
 
-  const riasecLines  = RIASEC.map(p => "  " + p[1] + ": " + fmtPct(p[0])).join("\n");
-  const bigfiveLines = BIGFIVE.map(p => "  " + p[1] + ": " + fmtPct(p[0])).join("\n");
+  const blockLines = (keys) => keys.map(k => "  " + labelFor(k) + ": " + fmtPct(k)).join("\n");
+  const inlineLine = (keys) => keys.map(k => labelFor(k) + " " + fmtPct(k)).join(", ");
 
-  const matchLines = matches.length > 0
-    ? matches.map((m, i) => "  " + (i + 1) + ". " + m.name + " — " + Math.round(m.matchScore || 0) + "%").join("\n")
-    : "  (no career matches available)";
-
+  // ===== Stream alignment for top 3 =====
   const streamKey = student && student.streamKey;
-  let streamAlignmentLine;
-  if (matches.length === 0) {
-    streamAlignmentLine = "  (no top match)";
-  } else if (!streamKey) {
-    streamAlignmentLine = "  " + matches[0].name + " — student has not selected a stream yet";
-  } else if (matches[0].streamAlignment && matches[0].streamAlignment[streamKey]) {
-    streamAlignmentLine = "  " + matches[0].name + " · " + (stream || streamKey) + ": " + matches[0].streamAlignment[streamKey];
-  } else {
-    streamAlignmentLine = "  " + matches[0].name + " · " + (stream || streamKey) + ": (not specified for this stream)";
-  }
+  const streamAlignmentLines = matches.slice(0, 3).map(m => {
+    if (!streamKey) return "  " + m.name + ": (student has not selected a stream)";
+    if (m.streamAlignment && m.streamAlignment[streamKey]) {
+      return "  " + m.name + " · " + (stream || streamKey) + ": " + m.streamAlignment[streamKey];
+    }
+    return "  " + m.name + " · " + (stream || streamKey) + ": (alignment not specified)";
+  }).join("\n");
 
+  // ===== Mode caveat + retake recommendation =====
+  const quickModeCaveat = isQuickMode
+    ? "Note (Quick Mode): only ~30 questions sampled across modules. Some dimensions " +
+      "may show '—' if not sampled, and small N can produce extreme percentiles " +
+      "(0% / 100%). Recommend the user retake the assessment in Full Mode (~60-75 " +
+      "questions) for a richer, more stable profile before drawing strong conclusions."
+    : "Note (Full Mode): comprehensive assessment — most dimensions sampled multiple times for stable percentiles.";
+
+  // ===== Build human-readable text block =====
   const textBlock =
-    "═══ Assessment Summary ═══\n" +
+    "═══ ASSESSMENT SUMMARY ═══\n\n" +
     "Profile: " + profileLine + "\n" +
     "Age group: " + ageLabel + " · Mode: " + modeLabel + "\n" +
-    "Archetype: " + archetypeLine + "\n" +
-    "Holland code: " + hollandCode + "\n\n" +
-    "RIASEC percentiles:\n" + riasecLines + "\n\n" +
-    "Big Five percentiles:\n" + bigfiveLines + "\n\n" +
-    "Top 5 career matches:\n" + matchLines + "\n\n" +
-    "Stream alignment for top match:\n" + streamAlignmentLine + "\n";
+    "Completed: " + completedAt + "\n" +
+    "Questions: " + meaningful + " answered, " + notSure + " 'not sure' (out of " + totalShown + " shown)\n\n" +
+    quickModeCaveat + "\n\n" +
+    "─── Archetype ───\n" +
+    (archetypeTop1
+      ? "  #1: " + archetypeTop1.archetype.name + " (" + Math.round(archetypeTop1.match) + "% match)\n" +
+        "      " + (archetypeTop1.archetype.description || "") + "\n"
+      : "  (unavailable)\n") +
+    (archetypeTop2 ? "  #2: " + archetypeTop2.archetype.name + " (" + Math.round(archetypeTop2.match) + "% match)\n" : "") +
+    (archetypeTop3 ? "  #3: " + archetypeTop3.archetype.name + " (" + Math.round(archetypeTop3.match) + "% match)\n" : "") +
+    "\n" +
+    "─── Holland Code (RIASEC Interests) ───\n" +
+    "  Top 3: " + ((student && student.hollandCode) || "—") + "\n" +
+    blockLines(RIASEC_KEYS) + "\n\n" +
+    "─── Big Five (OCEAN Personality) ───\n" +
+    blockLines(BIGFIVE_KEYS) + "\n\n" +
+    "─── Multiple Intelligences ───\n" +
+    blockLines(MI_KEYS) + "\n\n" +
+    "─── Aptitudes ───\n" +
+    blockLines(APT_KEYS) + "\n\n" +
+    "─── Emotional Intelligence ───\n" +
+    blockLines(EQ_KEYS) + "\n\n" +
+    "─── Creativity & Leadership ───\n" +
+    blockLines(["creativity","leadership"]) + "\n\n" +
+    "─── Learning Style (VARK) ───\n" +
+    blockLines(VARK_KEYS) + "\n\n" +
+    "─── Values ───\n" +
+    blockLines(VALUES_KEYS) + "\n\n" +
+    "─── Top 5 Career Matches ───\n" +
+    (matches.length > 0
+      ? matches.map((m, i) => "  " + (i+1) + ". " + m.name + " — " + Math.round(m.matchScore || 0) + "%").join("\n")
+      : "  (none)") + "\n\n" +
+    "─── Stream Alignment for Top 3 ───\n" +
+    (streamAlignmentLines || "  (no top matches)") + "\n\n" +
+    "─── Special Detections ───\n" +
+    "  Gifted/high-potential profile: " + (giftedFlag ? "yes" : "no") + "\n" +
+    "  Stream-pivot insight (top careers misalign with current stream): " + (pathwayFlag ? "yes" : "no") + "\n";
 
-  const riasecInline  = RIASEC.map(p => p[1] + " " + fmtPct(p[0])).join(", ");
-  const bigfiveInline = BIGFIVE.map(p => p[1] + " " + fmtPct(p[0])).join(", ");
-  const top5Inline = matches.length > 0
-    ? matches.map((m, i) => (i + 1) + ". " + m.name + " (" + Math.round(m.matchScore || 0) + "%)").join("; ")
-    : "(none)";
-
+  // ===== Build flat fields object for FormSubmit table view =====
   const fields = {
     summary_profile: profileLine,
-    summary_age_mode: ageLabel + " · " + modeLabel + " mode",
-    summary_archetype: archetypeName,
-    summary_holland_code: hollandCode,
-    summary_riasec: riasecInline,
-    summary_bigfive: bigfiveInline,
-    summary_top5_careers: top5Inline,
-    summary_top_match_stream_fit: streamAlignmentLine.trim()
+    summary_meta: ageLabel + " · " + modeLabel + " mode · completed " + completedAt,
+    summary_questions: meaningful + " answered · " + notSure + " 'not sure' · " + totalShown + " shown",
+    summary_caveat_recommendation: quickModeCaveat,
+    summary_archetype: archetypeTop1
+      ? archetypeTop1.archetype.name + " (" + Math.round(archetypeTop1.match) + "% match) — " + (archetypeTop1.archetype.description || "")
+      : "(unavailable)",
+    summary_archetype_runners_up: [
+      archetypeTop2 ? "#2 " + archetypeTop2.archetype.name + " (" + Math.round(archetypeTop2.match) + "%)" : "",
+      archetypeTop3 ? "#3 " + archetypeTop3.archetype.name + " (" + Math.round(archetypeTop3.match) + "%)" : ""
+    ].filter(Boolean).join("; ") || "(none)",
+    summary_holland_code: (student && student.hollandCode) || "—",
+    summary_riasec: inlineLine(RIASEC_KEYS),
+    summary_bigfive: inlineLine(BIGFIVE_KEYS),
+    summary_multiple_intelligences: inlineLine(MI_KEYS),
+    summary_aptitudes: inlineLine(APT_KEYS),
+    summary_emotional_intelligence: inlineLine(EQ_KEYS),
+    summary_creativity_leadership: "Creativity " + fmtPct("creativity") + ", Leadership " + fmtPct("leadership"),
+    summary_learning_style: inlineLine(VARK_KEYS),
+    summary_values: inlineLine(VALUES_KEYS),
+    summary_top5_careers: matches.length > 0
+      ? matches.map((m, i) => (i+1) + ". " + m.name + " (" + Math.round(m.matchScore || 0) + "%)").join("; ")
+      : "(none)",
+    summary_top3_stream_fit: matches.length > 0
+      ? matches.slice(0, 3).map(m => {
+          if (!streamKey) return m.name + ": (no stream)";
+          if (m.streamAlignment && m.streamAlignment[streamKey]) {
+            return m.name + ": " + m.streamAlignment[streamKey];
+          }
+          return m.name + ": (n/a)";
+        }).join(" | ")
+      : "(none)",
+    summary_special_detections: "Gifted=" + (giftedFlag ? "yes" : "no") +
+      " · Pathway-pivot=" + (pathwayFlag ? "yes" : "no")
   };
 
   return { textBlock: textBlock, fields: fields, hasData: true };
