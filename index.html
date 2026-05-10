@@ -919,6 +919,163 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
   .btn-cta-dual { width: 100%; max-width: none; }
 }
 
+/* 2026-05-10: prominent landing feedback banner — visually distinct
+   from main CTAs, designed to catch returning users without overwhelming
+   first-time visitors. Warm amber accent for friendly invitation tone. */
+.landing-feedback-banner {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--sp-4);
+  padding: var(--sp-3) var(--sp-5);
+  background: #fffdf5;
+  border: 1.5px solid #f59e0b;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 480px;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.08);
+}
+.landing-feedback-banner-prompt {
+  font-size: 0.85rem;
+  color: #92400e;
+  font-weight: 500;
+}
+.landing-feedback-banner-link {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #b45309;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.landing-feedback-banner-link:hover {
+  color: #92400e;
+  text-decoration: underline;
+}
+@media (max-width: 480px) {
+  .landing-feedback-banner { width: 100%; max-width: none; padding: var(--sp-3); }
+}
+
+/* 2026-05-10: feedback modal — modern in-app form for the "Send Feedback" flow.
+   Replaces the raw mailto launch with a structured modal experience. */
+.feedback-modal-body { padding: 0; }
+.feedback-intro {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--sp-4);
+  line-height: 1.5;
+}
+.feedback-field { margin-bottom: var(--sp-4); }
+.feedback-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: var(--sp-2);
+  color: var(--text-primary);
+}
+.feedback-label-meta {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+.feedback-rating-row {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.feedback-rating-btn {
+  flex: 1 1 100px;
+  min-width: 100px;
+  padding: var(--sp-3);
+  background: white;
+  border: 2px solid var(--border-soft);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  transition: all var(--dur-base) var(--ease);
+  color: var(--text-primary);
+}
+.feedback-rating-btn:hover {
+  border-color: var(--primary);
+  background: #f0f9f9;
+}
+.feedback-rating-btn.selected {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+.feedback-rating-btn .feedback-rating-emoji {
+  display: block;
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+.feedback-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: var(--sp-3);
+  border: 2px solid var(--border-soft);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color var(--dur-base) var(--ease);
+}
+.feedback-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.feedback-name-input {
+  width: 100%;
+  padding: var(--sp-3);
+  border: 2px solid var(--border-soft);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  transition: border-color var(--dur-base) var(--ease);
+}
+.feedback-name-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.feedback-status {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  display: none;
+}
+.feedback-status.sending {
+  display: block;
+  background: #f0f9f9;
+  border-left: 4px solid var(--primary);
+  color: var(--primary);
+}
+.feedback-status.success {
+  display: block;
+  background: #d1fae5;
+  border-left: 4px solid #059669;
+  color: #065f46;
+}
+.feedback-status.error {
+  display: block;
+  background: #fee2e2;
+  border-left: 4px solid #dc2626;
+  color: #991b1b;
+}
+.feedback-privacy-note {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border-soft);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
 /* Phase 6: subtle expectation-setting note on landing page. Small, muted,
    below CTA — does not compete visually with the Start button but is visible
    to first-time users so they calibrate expectations before starting. */
@@ -3013,6 +3170,11 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
   details > summary::before { content: "" !important; }
   details > *:not(summary) { display: revert !important; }
 
+  /* CRITICAL FIX (2026-05-10): hide the "Show 146 more (lower match scores)" details
+     element entirely in print. Without this, expanding it adds ~280 pages of low-relevance
+     career cards. The PDF should focus on the top matches the user actually cares about. */
+  details.careers-more { display: none !important; }
+
   /* --- Page-break-friendly layout --- */
   .career-card { page-break-inside: avoid; }
   h1, h2, h3, h4 { page-break-after: avoid; page-break-inside: avoid; }
@@ -3673,6 +3835,13 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
             </button>
           </div>
           <a href="#" class="cta-secondary hidden" id="ctaHistory">View Previous Results</a>
+          <!-- 2026-05-10: prominent feedback banner for returning users who already completed.
+               Distinct visual weight via amber border + light background. Doesn't compete with the
+               main assessment CTAs above; designed to catch returning visitors' attention. -->
+          <div class="landing-feedback-banner">
+            <span class="landing-feedback-banner-prompt">Already taken MyCareerLens?</span>
+            <a href="#" class="landing-feedback-banner-link" id="landingFeedbackLink" aria-label="Share your feedback about MyCareerLens">💬 Share your feedback &rarr;</a>
+          </div>
           <p class="hero-calibration">A simple career exploration tool — not a formal test or professional assessment. A starting point for thinking about career directions; it doesn't predict your future or guarantee outcomes.</p>
         </div>
       </div>
@@ -3793,7 +3962,8 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
             <button class="btn btn-secondary btn-sm" id="actCopy">📋 Copy</button>
             <button class="btn btn-secondary btn-sm" id="actShare">📱 Share Tool</button>
             <button class="btn btn-primary btn-sm" id="actSendParent">💌 Send to Parent</button>
-            <button class="btn btn-secondary btn-sm" id="actFeedback">💬 Share Your Thoughts</button>
+            <!-- 2026-05-10: promoted from btn-secondary btn-sm to primary, fuller label (Option B) -->
+            <button class="btn btn-primary" id="actFeedback" style="font-weight:700;">💬 Tell us what you thought (1 minute)</button>
             <button class="btn btn-ghost btn-sm" id="actRetake">🔄 Retake</button>
           </div>
         </div>
@@ -3845,6 +4015,8 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
         <button type="button" class="footer-link" id="aboutLink">About MyCareerLens</button>
         <button type="button" class="footer-link" id="altsLink">Other Free Tools</button>
         <button type="button" class="footer-link" id="glossaryLink">Glossary</button>
+        <!-- 2026-05-10: feedback link in footer for always-available access (Option B) -->
+        <button type="button" class="footer-link" id="footerFeedbackLink">💬 Send Feedback</button>
       </div>
     </div>
   </footer>
@@ -14331,7 +14503,17 @@ function showModal({ title, body, actions, wide, bodyClass }) {
     btn.className = `btn ${a.variant || "btn-secondary"}`;
     btn.textContent = a.label;
     btn.onclick = () => {
-      try { a.onClick && a.onClick(); } finally {
+      // 2026-05-10: backwards-compatible — if action onClick returns false explicitly,
+      // keep modal open (used by feedback modal to show status while submitting).
+      // Existing actions that return undefined continue to close the modal as before.
+      let keepOpen = false;
+      try {
+        const result = a.onClick && a.onClick();
+        if (result === false) keepOpen = true;
+      } catch (e) {
+        // swallow — modal still closes
+      }
+      if (!keepOpen) {
         backdrop.classList.remove("open");
         setTimeout(() => { mount.innerHTML = ""; }, 300);
       }
@@ -15327,7 +15509,7 @@ function initResultsActions() {
   if (copyBtn) copyBtn.onclick = () => copyResultsSummary();
   if (shareBtn) shareBtn.onclick = () => shareViaWhatsApp();
   if (sendParentBtn) sendParentBtn.onclick = () => sendResultsToParent();
-  if (feedbackBtn) feedbackBtn.onclick = () => sendFeedbackToRajan();
+  if (feedbackBtn) feedbackBtn.onclick = () => showFeedbackModal();
   if (retakeBtn) retakeBtn.onclick = () => safeAction(() => {
     showModal({
       title: "Retake Assessment?",
@@ -15512,7 +15694,7 @@ async function sendResultsToParent() {
    preserving the "no backend / no tracking" commitment in handoff §2.2.
    ============================================================ */
 
-const FEEDBACK_EMAIL = "rajantonapeai+mycareerlens@gmail.com";
+const FEEDBACK_EMAIL = "rajantonapeai@gmail.com";
 
 /* ============================================================
    v4.1.9 — ANONYMOUS COUNTERS (Visits + Completions)
@@ -15826,10 +16008,12 @@ function buildFeedbackEmail() {
 /**
  * Open the user's default email client with a pre-filled feedback message.
  * Uses mailto: — the user must explicitly Send in their own client; no data is
- * transmitted from the page itself.
+ * transmitted from the page itself. Used as the fallback path inside submitFeedback().
  */
-function sendFeedbackToRajan() {
-  const { subject, body } = buildFeedbackEmail();
+function sendFeedbackToRajan(prefilledBody, subjectOverride) {
+  const built = buildFeedbackEmail();
+  const subject = subjectOverride || built.subject;
+  const body = prefilledBody || built.body;
   const mailto = "mailto:" + FEEDBACK_EMAIL +
     "?subject=" + encodeURIComponent(subject) +
     "&body=" + encodeURIComponent(body);
@@ -15838,6 +16022,253 @@ function sendFeedbackToRajan() {
     showToast("Opening your email app…", "info");
   } catch (err) {
     showToast("Couldn't open your email app. Please email " + FEEDBACK_EMAIL + " directly.", "warning", 6000);
+  }
+}
+
+/* ============================================================
+   FEEDBACK MODAL — modern in-app form (2026-05-10)
+   ============================================================
+   In-app feedback delivery via FormSubmit.co — free, no signup, no API key required.
+   First time anyone submits, FormSubmit sends a one-time activation email to FEEDBACK_EMAIL.
+   The owner clicks the activation link once. From then on, all submissions are forwarded
+   directly to FEEDBACK_EMAIL with no further setup.
+
+   To disable in-app submission and revert to mailto-only, set FEEDBACK_ENDPOINT = "" below.
+   ============================================================ */
+const FEEDBACK_ENDPOINT = "https://formsubmit.co/ajax/" + encodeURIComponent("rajantonapeai@gmail.com");
+const FEEDBACK_RATINGS = [
+  { value: "good",    emoji: "👍", label: "Good" },
+  { value: "mixed",   emoji: "🤷", label: "Mixed" },
+  { value: "notgreat",emoji: "👎", label: "Not great" }
+];
+
+let _feedbackSelectedRating = null;
+
+/**
+ * Public entry — open the feedback modal.
+ * Replaces the prior direct mailto launch from feedback buttons.
+ */
+function showFeedbackModal() {
+  _feedbackSelectedRating = null;
+  const profile = State.profile || (State.session && State.session.profile) || {};
+  const presetName = (profile.studentName || "").split(" ")[0] || "";
+
+  const ratingsHtml = FEEDBACK_RATINGS.map(r =>
+    `<button type="button" class="feedback-rating-btn" data-rating="${r.value}" aria-pressed="false">
+       <span class="feedback-rating-emoji">${r.emoji}</span>
+       ${escapeHtml(r.label)}
+     </button>`
+  ).join("");
+
+  const body = `
+    <div class="feedback-modal-body">
+      <p class="feedback-intro">
+        Two minutes to share your honest reaction would mean a lot. There's no signup —
+        just type below and click Send.
+      </p>
+
+      <div class="feedback-field">
+        <label class="feedback-label">How was the experience overall?
+          <span class="feedback-label-meta">(optional)</span>
+        </label>
+        <div class="feedback-rating-row" id="feedback-ratings">${ratingsHtml}</div>
+      </div>
+
+      <div class="feedback-field">
+        <label class="feedback-label" for="feedback-comment">What would you like Rajan to know?</label>
+        <textarea id="feedback-comment" class="feedback-textarea"
+          placeholder="• Did the results feel like you?
+• Was anything confusing or surprising?
+• Anything you'd change or add?
+
+(or just write whatever's on your mind)"></textarea>
+      </div>
+
+      <div class="feedback-field">
+        <label class="feedback-label" for="feedback-name">Your name
+          <span class="feedback-label-meta">(optional — helps us follow up)</span>
+        </label>
+        <input type="text" id="feedback-name" class="feedback-name-input"
+          value="${escapeHtml(presetName)}" maxlength="50" placeholder="e.g., Arya">
+      </div>
+
+      <!-- Honeypot field, hidden from humans, bots fill it. Submission rejected if filled. -->
+      <input type="text" id="feedback-website" tabindex="-1" autocomplete="off"
+        style="position:absolute;left:-9999px;height:0;width:0;opacity:0;" aria-hidden="true">
+
+      <div class="feedback-status" id="feedback-status" role="status" aria-live="polite"></div>
+
+      <p class="feedback-privacy-note">
+        Your assessment answers and results never leave your device. Only what you type above is sent —
+        directly to Rajan via a small form-forwarding service (FormSubmit.co), which does not store data.
+        If that service is unreachable, the form falls back to opening your email app instead.
+        No tracking, no signup, no follow-up unless you provide a name and want one.
+      </p>
+    </div>`;
+
+  showModal({
+    title: "💬 Share Your Feedback",
+    body: body,
+    wide: true,
+    actions: [
+      { label: "Cancel", variant: "btn-ghost" },
+      { label: "Send Feedback", variant: "btn-primary", onClick: () => {
+        // Don't auto-close on submit; submitFeedback handles the close itself.
+        // Returning false would prevent closing, but onClick already runs before close in showModal.
+        // We use a flag-based pattern: submitFeedback dispatches a custom event when done.
+        submitFeedback();
+        return false; // prevents the default close — we close manually after success
+      }}
+    ]
+  });
+
+  // Wire rating button clicks
+  setTimeout(() => {
+    document.querySelectorAll("#feedback-ratings .feedback-rating-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#feedback-ratings .feedback-rating-btn").forEach(b => {
+          b.classList.remove("selected");
+          b.setAttribute("aria-pressed", "false");
+        });
+        btn.classList.add("selected");
+        btn.setAttribute("aria-pressed", "true");
+        _feedbackSelectedRating = btn.getAttribute("data-rating");
+      });
+    });
+    // Auto-focus the textarea
+    const ta = document.getElementById("feedback-comment");
+    if (ta) ta.focus();
+  }, 100);
+}
+
+/**
+ * Submit the feedback form. Tries FormSpree first if configured, otherwise
+ * falls back to mailto. On any failure, also falls back to mailto so the
+ * user's input is never lost.
+ */
+async function submitFeedback() {
+  const commentEl = document.getElementById("feedback-comment");
+  const nameEl = document.getElementById("feedback-name");
+  const honeypotEl = document.getElementById("feedback-website");
+  const statusEl = document.getElementById("feedback-status");
+
+  if (!commentEl || !statusEl) return;
+
+  const comment = (commentEl.value || "").trim();
+  const name = (nameEl ? nameEl.value : "").trim();
+  const honeypot = honeypotEl ? honeypotEl.value : "";
+  const rating = _feedbackSelectedRating;
+
+  // Validation
+  if (comment.length < 3) {
+    statusEl.className = "feedback-status error";
+    statusEl.textContent = "Please write at least a few words before sending.";
+    commentEl.focus();
+    return;
+  }
+
+  // Honeypot check — bots fill hidden fields, humans don't
+  if (honeypot && honeypot.length > 0) {
+    // Silently "succeed" so bots don't learn the trick
+    statusEl.className = "feedback-status success";
+    statusEl.textContent = "✓ Thank you — your feedback has been sent.";
+    setTimeout(() => closeOpenModal(), 2000);
+    return;
+  }
+
+  // Build the structured feedback body
+  const profile = State.profile || (State.session && State.session.profile) || {};
+  const ageLabel = GROUP_LABELS[State.ageGroup] || "—";
+  const modeLabel = State.assessmentMode === "quick" ? "Quick" : "Full";
+  const ratingLabel = rating ? FEEDBACK_RATINGS.find(r => r.value === rating)?.label || "—" : "—";
+  const ts = new Date().toLocaleString();
+
+  const subject = name
+    ? `MyCareerLens feedback from ${name}`
+    : "MyCareerLens feedback";
+
+  const body =
+    "Hi Rajan,\n\n" +
+    (rating ? `Overall reaction: ${ratingLabel}\n\n` : "") +
+    comment + "\n\n" +
+    (name ? `— ${name}\n\n` : "") +
+    "—\n" +
+    `Context: ${ageLabel} · ${modeLabel} mode · ${ts}\n`;
+
+  // Sending state
+  statusEl.className = "feedback-status sending";
+  statusEl.textContent = "Sending your feedback…";
+
+  // Try FormSubmit.co AJAX endpoint if configured
+  if (FEEDBACK_ENDPOINT && FEEDBACK_ENDPOINT.length > 0) {
+    try {
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 8000);
+      const resp = await fetch(FEEDBACK_ENDPOINT, {
+        method: "POST",
+        signal: ctrl.signal,
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+          _subject: subject,
+          _template: "table",
+          _captcha: "false",
+          name: name || "(anonymous)",
+          rating: ratingLabel,
+          feedback: comment,
+          context: ageLabel + " · " + modeLabel + " mode · " + ts
+        })
+      });
+      clearTimeout(timeout);
+      if (resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        // FormSubmit returns { success: "true" | "false", message: "..." }
+        if (data.success === "true" || data.success === true || resp.status === 200) {
+          statusEl.className = "feedback-status success";
+          statusEl.textContent = "✓ Thank you — your feedback has been sent. We read every message.";
+          setTimeout(() => closeOpenModal(), 2200);
+          return;
+        } else {
+          throw new Error("FormSubmit response: " + (data.message || "unknown"));
+        }
+      } else {
+        throw new Error("FormSubmit HTTP " + resp.status);
+      }
+    } catch (err) {
+      // Fall through to mailto fallback
+      console.warn("FormSubmit submission failed, falling back to mailto:", err);
+    }
+  }
+
+  // Mailto fallback (used if FEEDBACK_ENDPOINT is empty or FormSubmit fails)
+  statusEl.className = "feedback-status sending";
+  statusEl.textContent = FEEDBACK_ENDPOINT
+    ? "Opening your email app as a backup…"
+    : "Opening your email app to send your feedback…";
+  try {
+    sendFeedbackToRajan(body, subject);
+    setTimeout(() => {
+      statusEl.className = "feedback-status success";
+      statusEl.textContent = "✓ Your email app should have opened. Click Send there to deliver your feedback.";
+      setTimeout(() => closeOpenModal(), 3000);
+    }, 600);
+  } catch (e) {
+    statusEl.className = "feedback-status error";
+    statusEl.textContent = "Couldn't open your email app. Please email " + FEEDBACK_EMAIL + " directly with your thoughts.";
+  }
+}
+
+/**
+ * Close any open modal mounted via showModal.
+ */
+function closeOpenModal() {
+  const mount = document.getElementById("modalMount");
+  if (!mount) return;
+  const backdrop = mount.querySelector(".modal-backdrop");
+  if (backdrop) {
+    backdrop.classList.remove("open");
+    setTimeout(() => { mount.innerHTML = ""; }, 300);
+  } else {
+    mount.innerHTML = "";
   }
 }
 
@@ -15916,6 +16347,16 @@ function initLanding() {
   // Footer "Glossary" link — plain-language reference for terms used in CareerLens
   const glossaryBtn = document.getElementById("glossaryLink");
   if (glossaryBtn) glossaryBtn.onclick = () => showGlossaryModal();
+
+  // 2026-05-10: Feedback Option B — wire new footer + landing feedback entry points.
+  // Both call the existing sendFeedbackToRajan() — same underlying mailto flow as the
+  // results-screen button. Uniform UX wherever the user clicks feedback from.
+  const footerFeedbackBtn = document.getElementById("footerFeedbackLink");
+  if (footerFeedbackBtn) footerFeedbackBtn.onclick = () => showFeedbackModal();
+  const landingFeedbackLink = document.getElementById("landingFeedbackLink");
+  if (landingFeedbackLink) {
+    landingFeedbackLink.onclick = (e) => { e.preventDefault(); showFeedbackModal(); };
+  }
 }
 
 function startAssessment(mode) {
@@ -17471,6 +17912,250 @@ function runSelfTests() {
    ============================================================ */
 
 /* ============================================================
+   PRINT/PDF ENHANCEMENTS — added 2026-05-10 (Phase 4 expanded)
+   ============================================================
+   Wires beforeprint/afterprint listeners that inject a cover page,
+   table of contents, decision framework, comparison table,
+   archetype deep dive, India pathways appendix, stream guidance,
+   conversation starters, and AI-readable structured section into
+   the active results screen at print time, and force-expand
+   <details> accordions so all career details and FAQ answers
+   actually appear in the printed PDF. All injected nodes are
+   removed after print.
+
+   Live UX is COMPLETELY UNCHANGED. The DOM is only modified during
+   the print event lifecycle.
+   ============================================================ */
+
+// Archetype-specific narrative content — print-only.
+// Each entry deepens the assigned archetype with where they thrive,
+// growth edges, and a real-world framing for Indian context.
+const PRINT_ARCHETYPE_NARRATIVES = Object.freeze({
+  visionaryExplorer: {
+    tagline: "Imagination meets people-energy.",
+    narrative: "You combine open-minded curiosity with genuine social energy — a rare combination that makes you a natural connector of ideas and people. New experiences pull you forward, and you tend to inspire others to come along for the ride. You're at your best when you can explore broadly, talk through ideas, and build something with collaborators rather than working in isolation.",
+    thrives: ["Roles with travel, exposure to new fields, or rotating assignments", "Work involving public engagement, presentations, or community building", "Open-ended problem spaces where the path isn't predefined", "Teams that value originality alongside relationship-building"],
+    watchOut: ["Long, repetitive desk work without external stimulation can drain you", "You may overcommit to too many ideas — finishing matters as much as starting", "Be intentional about depth in at least one area; breadth without depth limits influence"],
+    realWorld: "Visionary explorers in India often lead in creative agencies, social enterprises, journalism, hospitality, education innovation, and entrepreneurship. They are people who turn 'what if' conversations into actual projects."
+  },
+  reflectiveInnovator: {
+    tagline: "Original ideas from quiet thought.",
+    narrative: "You think deeply, often alone, and the ideas you generate carry the weight of careful reflection. You're drawn to complexity and don't need a crowd to make sense of the world — sometimes a long walk and a notebook is enough. Your contributions tend to be original because they aren't just reactions to what's around you; they emerge from your own internal landscape.",
+    thrives: ["Research, writing, design, or analytical work with quiet focus time", "Problem spaces that reward depth rather than speed", "Roles where you can shape ideas before publishing or presenting them", "Mentors and collaborators who let you process before responding"],
+    watchOut: ["Solitary work can become isolating — schedule deliberate human contact", "Perfectionism may delay shipping; 'good enough and out' often beats 'perfect and unfinished'", "Your insights need translation for others; build the bridge from your head to their understanding"],
+    realWorld: "Reflective innovators thrive in research (NCBS, IISc, IIT labs), writing/literature, design studios, software architecture, policy analysis, and clinical psychology. India's quiet builders — the ones who shape entire fields without being on every panel."
+  },
+  steadyAchiever: {
+    tagline: "Disciplined, calm, reliably excellent.",
+    narrative: "You combine genuine discipline with emotional steadiness — you don't need drama to do great work. Steady forward motion is your superpower. You finish what you start, you show up consistently, and people learn they can count on you. Your career will likely look less like a flashy ascent and more like a deep, trustworthy track record.",
+    thrives: ["Roles that reward sustained excellence over flash — accounting, civil services, healthcare, engineering", "Long-cycle work like building practices, codebases, or institutions", "Environments that recognise reliable contribution rather than only loud output", "Career paths with clear progression and measurable milestones"],
+    watchOut: ["You may underclaim credit; learn to articulate your value clearly when it matters", "Long stretches of stability can become stagnation — periodically refresh challenges", "Your steadiness can mask inner stress; build in genuine rest, not just routine"],
+    realWorld: "Steady achievers are the backbone of Indian institutions — IAS officers, surgeons, senior engineers at PSUs, chartered accountants who build long client relationships, school principals. The people who make systems actually work."
+  },
+  drivenLeader: {
+    tagline: "Organised, ambitious, brings others along.",
+    narrative: "You combine personal discipline with the kind of social energy that pulls others toward shared goals. You're comfortable taking responsibility, you set high standards, and you can hold a team to those standards without becoming abrasive. Leadership isn't a title for you — it's how you naturally operate, even in roles that don't formally require it.",
+    thrives: ["Roles managing teams, projects, or operations with clear targets", "Founder/co-founder paths in early-stage ventures", "Sales, business development, consulting, military/civil services leadership", "Environments that reward visible results and accountability"],
+    watchOut: ["Push without listening turns drive into dominance; balance assertion with genuine inquiry", "High standards can become harsh judgement of self and others — softness is also strength", "Fast pace may outrun the team's capacity; calibrate speed to context"],
+    realWorld: "Driven leaders are over-represented in management consulting (BCG, McKinsey, BCG India), startup founders, IAS/IPS, business operations, and senior corporate roles. They often turn around stuck teams and ship things that have languished."
+  },
+  compassionateConnector: {
+    tagline: "Builds deep, real relationships.",
+    narrative: "You see people clearly, and you care about what you see. Empathy isn't performance for you — it's how you actually understand the world. You're often the person friends and colleagues come to when something's hard, because you listen before you respond. Your influence operates through trust rather than authority, and that turns out to be powerful.",
+    thrives: ["Counselling, social work, healthcare (especially psychology, paediatrics, palliative care), HR, teaching", "Mediation and conflict-resolution roles", "Community-impact careers in NGOs, public health, or social enterprises", "Work with vulnerable populations who need patient, careful attention"],
+    watchOut: ["Empathy fatigue is real; build deliberate boundaries and recovery time", "You may absorb others' problems; learn to support without carrying their weight", "Avoidance of conflict can hurt you in negotiations — voice your own needs too"],
+    realWorld: "Compassionate connectors thrive as clinical psychologists, school counsellors (the good ones), social workers in tier-2/3 cities, family doctors, and HR partners. India's mental-health and care economy needs them."
+  },
+  dependableAlly: {
+    tagline: "Kind, organised, follows through.",
+    narrative: "You're the one who actually does what was promised, in the way it was promised, by when it was promised. That's rarer than people realise. You combine warmth with reliability — you don't just like people, you make their lives easier through your follow-through. Careers, families, and communities rest on people like you, even when the credit goes elsewhere.",
+    thrives: ["Operations, project coordination, programme management", "Education, especially primary/secondary teaching and administration", "Healthcare support roles — nursing, allied health, hospital administration", "Family business roles where trust and continuity matter"],
+    watchOut: ["You may take on too much because saying 'no' feels rude; selective 'no's protect quality 'yes's", "You can be undervalued in environments that reward visibility; choose workplaces that see you", "Being agreeable shouldn't mean abandoning your own preferences in big decisions"],
+    realWorld: "Dependable allies are central to schools, hospitals, family businesses, and organisations that genuinely scale. India's primary teachers, ward nurses, operations leads, and trusted family-firm successors are often this archetype."
+  },
+  boldInitiator: {
+    tagline: "Energetic, action-first, starts things.",
+    narrative: "You don't wait for permission. When you see an opportunity, you move. Your energy is contagious, and you're rarely afraid of cold-starts — calling strangers, pitching ideas, walking into a room and starting a conversation. Risk doesn't paralyse you; it's part of how you discover what's possible.",
+    thrives: ["Sales, business development, entrepreneurship, real estate, hospitality", "Event management, creative production, media", "Frontline civil services, defence, sports", "Growth roles in startups where speed beats certainty"],
+    watchOut: ["Action without reflection leads to repeating mistakes; build in 'what just happened?' moments", "Charisma can outrun substance; pair your energy with depth in at least one craft", "Boredom in stable roles is real — choose work environments with genuine novelty"],
+    realWorld: "Bold initiators are the people who start new businesses, who get stuck deals unstuck, who turn a nervous team into a confident one. India's startup ecosystem (Bengaluru, Pune, Hyderabad, Delhi-NCR) runs on them."
+  },
+  calmAnalyst: {
+    tagline: "Unflappable, rational, problem-solver.",
+    narrative: "Pressure that scrambles others tends to clarify your thinking. You see systems where others see chaos, and you're patient with complex problems that don't yield to first-pass solutions. You don't need to be the loudest voice — your power is in the quality of your analysis and the steadiness with which you deliver it.",
+    thrives: ["Engineering, especially systems-level roles (cloud architecture, mechanical design, civil engineering)", "Data science, financial analysis, actuarial work", "Crisis-response roles — defence, emergency medicine, cybersecurity", "Research, especially quantitative or experimental"],
+    watchOut: ["Calm can read as detached; warmth in communication helps others trust your conclusions", "You may underweight emotional/political dimensions of decisions — they matter even when irrational", "Don't wait for full data when partial data + judgement is enough; speed matters too"],
+    realWorld: "Calm analysts thrive at IITs/IISc, data-driven companies (Flipkart analytics, banking quant teams), defence research (DRDO), and cybersecurity. They're often the people whose advice gets sought when things are genuinely going wrong."
+  },
+  creativeDreamer: {
+    tagline: "Imaginative, drawn to beauty and self-expression.",
+    narrative: "You're tuned to aesthetics — not as decoration, but as how you understand the world. Beauty, story, image, and form aren't optional for you; they're the substance of meaning. Your creative output may not always be loud, but it carries authenticity that mass-produced work can't match. The challenge is sustaining a creative practice when the world rewards conformity.",
+    thrives: ["Visual arts, writing, filmmaking, design (graphic, UI, fashion, interior, industrial)", "Content creation, photography, animation, music production", "Architecture and creative direction", "Teaching arts or running creative workshops"],
+    watchOut: ["Sensitivity to critique is real; build a small circle of trusted critics rather than reading every comment", "Creative work has unsteady income — financial planning matters, especially in early career", "Many projects started, few finished is a common pattern; ship more, even imperfect"],
+    realWorld: "Creative dreamers are India's content creators, designers (NID/NIFT alumni and self-taught), writers, filmmakers, advertising creatives, and animation artists. The creative economy is growing — your skills matter and pay better than they used to."
+  },
+  precisionMaster: {
+    tagline: "Excels at accuracy, systems, and structured excellence.",
+    narrative: "You notice things others miss. The misplaced comma, the inconsistency in the spreadsheet, the gap in the process — these things draw your attention naturally. You take pride in work being right, not just done. In an era of fast-and-good-enough, your standards are an asset, especially in fields where errors are costly.",
+    thrives: ["Chartered accountancy, audit, compliance, legal practice", "Quality assurance, regulatory affairs, clinical research", "Pharmaceutical work, medical practice, dental practice", "Database administration, technical documentation, editing"],
+    watchOut: ["Perfectionism can paralyse — define 'good enough' standards explicitly", "Detail focus may obscure strategic context; periodically zoom out", "Patience with chaotic environments runs thin; choose workplaces with structure"],
+    realWorld: "Precision masters thrive at Big-4 audit firms, pharmaceutical R&D, banking compliance, regulatory bodies (SEBI, RBI), and high-stakes clinical settings. India's growing compliance economy needs them."
+  },
+  communityBuilder: {
+    tagline: "Lives to serve and strengthen communities.",
+    narrative: "Other people's flourishing is genuinely how you measure your own. You're drawn to roles where success is collective, not individual — where lifting a community matters more than personal advancement. This is rarer than it sounds, and India needs people like you in places that institutions struggle to reach.",
+    thrives: ["NGO work, rural development, public health programmes", "Teaching in under-served schools, social entrepreneurship", "Cooperative businesses, microfinance, FPO leadership", "Religious or community organisation leadership"],
+    watchOut: ["Burnout is the major risk; sustainability beats heroism", "Impact-oriented work often has weak feedback loops — build measurement in", "Don't neglect personal/family financial security in service of others"],
+    realWorld: "Community builders run India's best NGOs (Pratham, Akshara, Goonj), social enterprises, rural cooperatives, and grassroots government schemes. Bharat (rural India) needs more of you, and the work is genuinely meaningful."
+  },
+  socialCatalyst: {
+    tagline: "Energises groups; brings people together.",
+    narrative: "Rooms feel different when you walk in. You read social dynamics quickly, you put people at ease, and you can shift the energy of a meeting almost without trying. Networks form around you because you make connecting feel natural rather than transactional. This is a real skill — most people are bad at it.",
+    thrives: ["Public relations, marketing, brand management, hospitality leadership", "Event production, creative direction in agencies", "Sales (especially relationship-driven B2B)", "Community-led product or marketing roles in startups"],
+    watchOut: ["Energy depletes faster than you think; protect recovery time", "Likeability can substitute for substance — make sure you're also delivering hard outcomes", "Networks weaken if not maintained; intentional follow-up matters"],
+    realWorld: "Social catalysts thrive in PR firms, agencies (Ogilvy, Wieden+Kennedy India), hospitality groups, brand teams at Indian consumer companies (HUL, ITC, Asian Paints), and community-driven ventures."
+  },
+  wiseObserver: {
+    tagline: "Self-aware, emotionally grounded, thoughtful.",
+    narrative: "You combine strong self-knowledge with emotional steadiness — a combination that often comes only with age, but you have it earlier. You watch carefully before acting, and your observations tend to be accurate because you're not distracted by needing to perform. People tend to trust your judgement even before they understand exactly why.",
+    thrives: ["Counselling, coaching, mentoring roles", "Research and writing where careful observation pays off", "Senior advisory roles where calm wisdom matters", "Long-form work — books, longitudinal research, institutional building"],
+    watchOut: ["Watching too long can become inaction; trust your judgement and move", "Quiet wisdom can be invisible in noisy environments; learn to claim space", "Not everyone wants reflection — adapt your communication style to context"],
+    realWorld: "Wise observers thrive as therapists, executive coaches, senior journalists, philosophy/humanities scholars, and 'second-act' founders who bring lived wisdom. India needs more thoughtful elders in public discourse."
+  },
+  curiousNaturalist: {
+    tagline: "Fascinated by the natural world.",
+    narrative: "Your attention is drawn to systems — biological, ecological, physical — in ways that most people's isn't. You notice patterns in nature that others overlook, and you ask questions about how things actually work. This curiosity, sustained over time, becomes deep expertise in fields that India needs more of.",
+    thrives: ["Environmental science, conservation, wildlife biology, marine biology", "Agricultural research, sustainability consulting, climate analysis", "Veterinary science, forestry, geology", "Documentary filmmaking or nature writing"],
+    watchOut: ["Career paths can be financially precarious — plan for that", "Field work is physically demanding; build sustainable habits early", "Environmental work has slow feedback loops; long-term resilience matters"],
+    realWorld: "Curious naturalists work at WII (Wildlife Institute of India), the Centre for Ecological Sciences (IISc), NCF, ATREE, Sanctuary Asia, and increasingly at climate-focused startups. India's biodiversity and climate work need more of you."
+  },
+  strategicPlanner: {
+    tagline: "Loves organising, planning, working with data.",
+    narrative: "You see numbers and structures where others see noise. Your strength is in turning complexity into clarity — building plans, models, and systems that hold up under scrutiny. You're patient with details, comfortable with abstraction, and you take quiet pride in spreadsheets that actually balance.",
+    thrives: ["Corporate strategy, management consulting, operations research", "Investment banking, equity research, financial planning", "Supply chain, logistics, operations leadership", "Civil services where planning matters (planning commission, NITI Aayog)"],
+    watchOut: ["Models can drift from reality; ground-truth your assumptions regularly", "Over-planning delays action — perfect plans don't exist", "Strategic work can feel disconnected; volunteer for execution sometimes to stay connected"],
+    realWorld: "Strategic planners thrive at consulting (McKinsey, BCG, Bain India), investment banks, corporate strategy teams at conglomerates (Tata, Mahindra, Reliance), and increasingly at well-funded Indian startups."
+  },
+  versatileAdapter: {
+    tagline: "Flexible, well-rounded, comfortable in many situations.",
+    narrative: "Your strengths don't sit in one extreme — they're balanced across many areas. Some assessments treat this as 'no clear pattern,' but balance is itself a pattern. Most successful careers actually require this kind of versatility: enough analytical thinking, enough people skills, enough discipline, enough creativity. You may take longer to find your specific direction, but you'll have more options than most.",
+    thrives: ["General management roles requiring breadth", "Family business successor positions", "Civil services (especially generalist roles like IAS)", "Cross-functional roles in early-stage startups"],
+    watchOut: ["Without depth in something, you risk being seen as a generalist for life — pick one area to go deep", "Many directions can mean indecision; setting time-bound experiments helps", "Versatility can hide a hidden strong preference; longer self-reflection often reveals it"],
+    realWorld: "Versatile adapters often become senior leaders at large organisations because they can move between functions. Examples: civil servants who shape multiple sectors, second-generation business leaders, multi-disciplinary academics."
+  }
+});
+
+// Sector-level India pathway hints — print-only.
+// Maps the 17 sectors used in CAREER_DATABASE to relevant entrance exams,
+// college tiers, alternative paths, and cost reality. Used to enrich the
+// printed report with India-specific guidance the live app's career cards
+// don't currently surface.
+const PRINT_SECTOR_PATHWAYS = Object.freeze({
+  "Healthcare": {
+    exams: "NEET (UG) for MBBS/BDS/BAMS/BHMS/BSc Nursing; AIIMS exam; specialty NEET-PG and NEET-SS for postgraduate.",
+    colleges: "Top tier — AIIMS (multiple cities), JIPMER, CMC Vellore. Mid tier — Government medical colleges (state quotas usually less competitive). Accessible — Private medical colleges (high fees, often ₹10–30 LPA total) and BAMS/BHMS as alternatives.",
+    alternatives: "BSc Nursing (4 years, cheaper, faster route to clinical work), Allied Health (B.Pharm, Physiotherapy, Optometry, Lab Technology), Paramedical certifications via NSDC.",
+    cost: "Government MBBS ₹50K–2L total; private MBBS ₹40L–1Cr+. Plan financing 2 years before exam if private route is needed."
+  },
+  "Engineering": {
+    exams: "JEE Main and JEE Advanced for IIT/NIT/IIIT/GFTI; state CETs (MH-CET, KCET, WBJEE, KEAM); BITSAT for BITS.",
+    colleges: "Top tier — IITs (~17K seats nationwide, very competitive), NITs, BITS, IIITs. Mid tier — Top state government engineering colleges. Accessible — Private engineering colleges (vary widely; check NIRF rankings and placement data).",
+    alternatives: "Polytechnic diploma (3 years after Class 10, then lateral entry to BE), B.Sc + technical certifications, online degrees (BITS WILP, IIT Madras Online BSc Data Science).",
+    cost: "IITs/NITs ~₹2.5–3L total. Private engineering ₹4–15L total. Placements vary hugely — research before committing."
+  },
+  "Technology": {
+    exams: "JEE for B.Tech CS/IT; CUET for BSc CS at central universities; NIMCET for MCA. Many roles accept self-taught entrants — degree matters less than portfolio.",
+    colleges: "Top tier — IIT CS departments, BITS Pilani, IIIT Hyderabad/Bangalore/Delhi. Mid tier — Reputed engineering colleges with good CS programmes. Online — UpGrad, Scaler, Newton School (paid bootcamps), free MOOCs (NPTEL, freeCodeCamp).",
+    alternatives: "Self-taught path is genuinely viable in software — strong GitHub portfolio + 2–3 internships matters more than degree pedigree at mid-career. Bootcamps for career changers.",
+    cost: "Top colleges similar to engineering. Bootcamps ₹2–4L. Self-taught path: near-zero direct cost, but opportunity cost of slower start."
+  },
+  "Finance": {
+    exams: "CA Foundation/Inter/Final (Institute of Chartered Accountants); CFA (international); CMA; Company Secretary (CS) exam by ICSI; Actuarial Science (IAI exams).",
+    colleges: "B.Com from any reputable college works for CA route. Top colleges (Shri Ram, St. Stephen's, Loyola Chennai, NM College Mumbai) for IB/consulting recruitment. CFA can be done alongside any degree.",
+    alternatives: "BBA + MBA from IIMs/Tier-1 B-schools. Insurance/banking exam routes (IBPS, RBI Grade B). Direct entry to NBFCs/wealth management with relevant certifications.",
+    cost: "CA: ~₹2L total over 4–5 years (cheapest premium credential in India). MBA: ₹15–25L at IIMs, more at ISB/private."
+  },
+  "Business & Management": {
+    exams: "CAT (IIMs), XAT (XLRI), GMAT (international and ISB), NMAT (NMIMS), SNAP (Symbiosis), MAT (many private B-schools). For UG: BBA admissions via state CETs and private institutional exams.",
+    colleges: "Top tier — IIMs (especially A/B/C/L/I/K), ISB, FMS Delhi, XLRI, IIT B-school programmes. Mid tier — IIM tier-2 campuses, NMIMS, MDI, IIFT. International — INSEAD, LBS, Cambridge for senior career pivots.",
+    alternatives: "Direct experience route: 2–3 years post-college work, then strong MBA. Family business apprenticeship. Online MBAs (IIM Indore Executive, online programmes from BITS, etc.) for working professionals.",
+    cost: "IIM 2-year MBA ₹20–30L. ISB 1-year ₹35L+. ROI generally strong from top schools; weak from sub-tier-2 colleges."
+  },
+  "Law": {
+    exams: "CLAT for NLUs (BA LLB / BBA LLB integrated 5-year); AILET for NLU Delhi; LSAT-India; SLAT (Symbiosis); state-level CLEs. For LLM: CLAT-PG, university-specific.",
+    colleges: "Top tier — NLU Bangalore (NLSIU), NALSAR Hyderabad, NLU Delhi, NUJS Kolkata. Mid tier — Other NLUs, Symbiosis, ILS Pune, GLC Mumbai. Accessible — State law colleges, private law schools.",
+    alternatives: "3-year LLB after a Bachelor's degree (alternative for those who didn't take CLAT). Judicial services exams for those drawn to becoming a judge. Company secretary route.",
+    cost: "NLUs ₹15–20L total over 5 years (residential). State law colleges much cheaper but placement networks weaker."
+  },
+  "Education": {
+    exams: "B.Ed admission via state-level entrance tests after Bachelor's. NET/SET for college teaching. CTET / state TET for school teaching. NEET for educational psychology paths.",
+    colleges: "Top tier — TISS, Delhi University, Azim Premji University (M.A. Education). Mid tier — Government B.Ed colleges, IGNOU.",
+    alternatives: "Direct teaching experience without B.Ed in private schools; certification routes (CIDTT, IB teacher training); online platforms (Khan Academy, Byju's content development); NGO education roles.",
+    cost: "Government B.Ed ₹10–30K total; private varies. M.A. Education ₹3–10L. Strong NGO sector for those willing to work outside formal schools."
+  },
+  "Creative Arts": {
+    exams: "NIFT entrance for design; NID DAT for industrial/communication design; UCEED for IIT design programmes; CEED for postgrad. Many private design schools have own admission tests.",
+    colleges: "Top tier — NID Ahmedabad, NIFT Delhi/Mumbai, Srishti Bangalore, Symbiosis Institute of Design, IDC Bombay. Mid tier — Various NIFT/NID extension campuses, MIT Pune, JJ School Mumbai.",
+    alternatives: "Self-taught + strong portfolio is viable in graphic, UI, and content design. Apprenticeships at design studios. Online programmes (Coursera, Domestika, freeCodeCamp for UI).",
+    cost: "NID ₹15–20L total. NIFT ₹10–15L. Private design schools highly variable. Self-taught path: very low cost, requires discipline."
+  },
+  "Writing & Media": {
+    exams: "Generally no centralised exam. Mass communication: IIMC entrance, ACJ Chennai, Symbiosis SCMC. Journalism: B.A. English/Journalism + portfolio.",
+    colleges: "Top tier — IIMC Delhi, ACJ Chennai, Xavier Institute of Communications Mumbai. Mid tier — Symbiosis SCMC, MICA (advertising), AJK MCRC Jamia Millia. Many enter through self-built portfolios.",
+    alternatives: "Self-publishing on Substack/Medium/YouTube; freelance writing for digital publications; content roles at startups (less gatekept than traditional media).",
+    cost: "IIMC/ACJ ₹2–4L total (very accessible). MICA ~₹15L. Self-built portfolio path: time-cost rather than money-cost."
+  },
+  "Science & Research": {
+    exams: "JEE Advanced (some IITs offer BS/M.S. dual degrees in sciences); IISER Aptitude Test (IISERs at Pune, Kolkata, Mohali, Bhopal, etc.); KVPY (now subsumed under INSPIRE-SHE); CUET for central universities.",
+    colleges: "Top tier — IISc, IISERs, TIFR, NCBS, Inter-University Centres. Mid tier — University departments at JNU, BHU, DU, Hyderabad Central University. Excellent international PhD programmes.",
+    alternatives: "B.Sc → M.Sc → PhD via NET-JRF (CSIR/UGC). DST INSPIRE fellowships. Direct research assistant roles at TIFR/ICTS to test fit before PhD commitment.",
+    cost: "IISc/IISER stipend covers UG + master's costs for many. PhD with fellowship is ~₹30K/month — sustainable."
+  },
+  "Government & Civil Services": {
+    exams: "UPSC Civil Services (IAS/IPS/IFS/IRS); State PSC exams; SSC CGL; RBI Grade B; CDS/NDA/AFCAT for armed forces. Highly competitive — typical preparation 12–24 months.",
+    colleges: "Most top officers came from various institutions — civil services preparation is degree-agnostic. Coaching: Vajiram, Vision IAS, Forum IAS, Insights IAS. Free resources increasing.",
+    alternatives: "State-level civil services (less competitive than UPSC, equally meaningful work). Public sector banks. Defence forces. Para-military.",
+    cost: "Self-study possible. Coaching ₹2–5L if needed. UPSC route can take 2–4 years; financial planning matters since income is delayed."
+  },
+  "Sports & Fitness": {
+    exams: "BPEd entrance via state colleges; LNIPE Gwalior entrance; SAI scholarships for elite athletes. Sports science: AIPMT/state CET routes for sports medicine.",
+    colleges: "Top tier — LNIPE Gwalior, Netaji Subhas University of Sports, IISM Mumbai. Mid tier — State physical education colleges. International — academies in specialised sports.",
+    alternatives: "Direct path through state/national-level performance + coaching certification. Personal training certifications (ACE, NASM internationally; FITSA in India). Sports physiotherapy via BPT route.",
+    cost: "Public sports academies subsidised. Private academies expensive. ROI depends heavily on performance — career length is shorter than most fields."
+  },
+  "Hospitality & Culinary": {
+    exams: "NCHM JEE for IHM (Institutes of Hotel Management); state hospitality entrance tests. Culinary: IICA, ICCA, private culinary schools.",
+    colleges: "Top tier — IHM Mumbai/Bangalore/Delhi/Chennai, Welcomgroup Graduate School, Oberoi Centre of Learning. Mid tier — Other IHMs, private hospitality schools. International — Le Cordon Bleu (London/Bangkok branches), CIA (USA).",
+    alternatives: "Direct entry to hotel groups via housekeeping/F&B operations; specialised certifications (Cicerone for beer, WSET for wine). Cloud kitchen / food entrepreneurship.",
+    cost: "IHM ₹3–5L total. Private hospitality schools ₹6–12L. International programmes ₹40L+. Industry has steady demand and good travel opportunities."
+  },
+  "Agriculture & Environment": {
+    exams: "ICAR AIEEA for B.Sc Agriculture / Horticulture / Forestry; state agricultural university entrance exams; IFS exam (Indian Forest Service via UPSC).",
+    colleges: "Top tier — IARI Delhi (PG), Punjab Agricultural University, Tamil Nadu Agricultural University, GBPUAT Pantnagar. Mid tier — State agricultural universities. Forestry — FRI Dehradun.",
+    alternatives: "Direct farming + agribusiness; agritech startup roles (DeHaat, Ninjacart, Cropin); FPO (Farmer Producer Organisation) roles via NABARD; environmental NGOs.",
+    cost: "Government agricultural universities very affordable (~₹1–3L total). Strong demand from agritech sector and rural development organisations."
+  },
+  "Skilled Trades & Vocational": {
+    exams: "ITI admissions via state-level merit (often Class 10 marks); NSDC / Skill India training centres; polytechnic entrance for diplomas.",
+    colleges: "Top tier — ATIs (Advanced Training Institutes), NSDC-accredited training partners, government ITIs in industrial states. Mid tier — Private vocational training providers.",
+    alternatives: "Direct apprenticeship through Apprentices Act (paid training); short-term courses in specific skills (welding, electrician, plumbing, automotive). NIOS (National Institute of Open Schooling) for flexible academic routes alongside trades.",
+    cost: "Government ITI ₹5–20K total. Highly affordable; strong demand for skilled trades; often higher take-home than fresh graduates of low-tier colleges."
+  },
+  "Social Services": {
+    exams: "TISS BAT (TISS Bachelor's Admission Test for B.A. Social Sciences); MSW entrance via state and private institutions. UPSC for senior development roles.",
+    colleges: "Top tier — TISS Mumbai/Tuljapur/Hyderabad, Delhi School of Social Work, IGNTU. Mid tier — University social work departments across India.",
+    alternatives: "Direct NGO entry post any Bachelor's degree; fellowships (Gandhi Fellowship, Teach For India, SBI YFI); CSR roles at corporates; international development roles.",
+    cost: "TISS programmes are very affordable (~₹3–5L total) with strong placement outcomes in development sector. Sector pays modestly but meaningfully."
+  },
+  "Entrepreneurship": {
+    exams: "No centralised path. MBA from top schools helps with co-founder networks and seed funding. Some incubators (IIM-Bangalore NSRCEL, IIT incubators) offer structured early-stage support.",
+    colleges: "Founder backgrounds vary widely — IITs/NITs/IIMs over-represented but not required. Y Combinator (and equivalents like Sequoia Surge, AngelPad), accelerators provide non-college credentialing.",
+    alternatives: "Build something while studying or working; join an early-stage startup as #5 employee to learn before founding. Solo entrepreneur path via service businesses, content creation, or specialised skills.",
+    cost: "Direct founding cost: bootstrap requires runway (6–18 months of personal expenses). Funded path requires network. Plan for ₹5–10L personal runway minimum if going full-time on a startup."
+  }
+});
+
+/* ============================================================
    PRINT/PDF ENHANCEMENTS — added 2026-05-10
    ============================================================
    Wires beforeprint/afterprint listeners that inject a cover page,
@@ -17517,36 +18202,49 @@ function _onBeforePrint() {
     if (!resultsScreen || !resultsScreen.classList.contains("active")) return;
     if (!State.session || !canShowResults(State.session)) return;
 
+    // Generate all print-only content first
     const coverHtml = generatePrintCoverPage();
     const tocHtml = generatePrintTOC();
+    const decisionHtml = generatePrintDecisionFramework();
+    const comparisonHtml = generatePrintComparisonTable();
+    const archetypeHtml = generatePrintArchetypeDeepDive();
+    const pathwaysHtml = generatePrintPathwaysAppendix();
+    const streamHtml = generatePrintStreamGuidance();
+    const conversationHtml = generatePrintConversationStarters();
     const aiHtml = generatePrintAISection();
 
-    // Cover + TOC at the top
-    if (coverHtml) {
-      const coverWrap = document.createElement("div");
-      coverWrap.id = "_print-cover-wrap";
-      coverWrap.innerHTML = coverHtml;
-      resultsScreen.insertBefore(coverWrap, resultsScreen.firstChild);
-      _printInjectedNodes.push(coverWrap);
-    }
-    if (tocHtml) {
-      const tocWrap = document.createElement("div");
-      tocWrap.id = "_print-toc-wrap";
-      tocWrap.innerHTML = tocHtml;
-      const cover = document.getElementById("_print-cover-wrap");
-      if (cover) cover.after(tocWrap);
-      else resultsScreen.insertBefore(tocWrap, resultsScreen.firstChild);
-      _printInjectedNodes.push(tocWrap);
-    }
+    // === Top section (inserted before existing results content) ===
+    // Order: Cover -> TOC -> Decision Framework -> Comparison Table -> [existing content]
+    // We insert each at index 0 in REVERSE order so final order matches the list above.
+    const insertAtTop = (id, html) => {
+      if (!html) return;
+      const wrap = document.createElement("div");
+      wrap.id = id;
+      wrap.innerHTML = html;
+      resultsScreen.insertBefore(wrap, resultsScreen.firstChild);
+      _printInjectedNodes.push(wrap);
+    };
+    // Insert in reverse order of desired final order
+    insertAtTop("_print-comparison-wrap", comparisonHtml);
+    insertAtTop("_print-decision-wrap", decisionHtml);
+    insertAtTop("_print-toc-wrap", tocHtml);
+    insertAtTop("_print-cover-wrap", coverHtml);
 
-    // AI section at the bottom
-    if (aiHtml) {
-      const aiWrap = document.createElement("div");
-      aiWrap.id = "_print-ai-wrap";
-      aiWrap.innerHTML = aiHtml;
-      resultsScreen.appendChild(aiWrap);
-      _printInjectedNodes.push(aiWrap);
-    }
+    // === Bottom section (appended after existing results content) ===
+    // Order: Archetype Deep Dive -> Pathways -> Stream Guidance -> Conversation Starters -> AI Tools
+    const insertAtBottom = (id, html) => {
+      if (!html) return;
+      const wrap = document.createElement("div");
+      wrap.id = id;
+      wrap.innerHTML = html;
+      resultsScreen.appendChild(wrap);
+      _printInjectedNodes.push(wrap);
+    };
+    insertAtBottom("_print-archetype-wrap", archetypeHtml);
+    insertAtBottom("_print-pathways-wrap", pathwaysHtml);
+    insertAtBottom("_print-stream-wrap", streamHtml);
+    insertAtBottom("_print-conversation-wrap", conversationHtml);
+    insertAtBottom("_print-ai-wrap", aiHtml);
   } catch (e) {
     console.warn("Print enhancement (beforeprint) failed:", e);
   }
@@ -17638,14 +18336,22 @@ function generatePrintCoverPage() {
 }
 
 function generatePrintTOC() {
+  const ageGroup = State.session && State.session.ageGroup;
+  const includeStream = ageGroup === "C";
   return `<div class="print-only print-toc">
       <h2>Contents</h2>
       <ol>
+        <li><strong>How to Use This Report</strong> — a 4-step framework for getting value from these results</li>
+        <li><strong>Top 3 Career Matches — Side-by-Side</strong> — at-a-glance comparison for decision-making</li>
         <li><strong>Your Profile</strong> — archetype, Holland Code, top strengths, growth areas</li>
         <li><strong>Full Dimension Breakdown</strong> — all measured dimensions across 9 modules</li>
+        <li><strong>Archetype Deep Dive</strong> — where you thrive, growth edges, real-world fit</li>
         <li><strong>Your Top Career Matches</strong> — with details, salary, education paths, skills, free resources</li>
-        <li><strong>Your Personalised Action Plan</strong> — short-term and long-term steps</li>
+        <li><strong>India-Specific Pathways</strong> — entrance exams, college tiers, alternative routes for your top careers</li>
+        <li><strong>Your Personalised Action Plan</strong> — short-term and long-term steps</li>${includeStream ? `
+        <li><strong>Stream Selection Guidance</strong> — recommended Class 11 stream based on your profile</li>` : ""}
         <li><strong>Parent Guide</strong> — supporting your child's exploration</li>
+        <li><strong>Conversation Starters for Parents</strong> — specific prompts based on this profile</li>
         <li><strong>For AI Tools</strong> — structured profile + matches for use with AI assistants</li>
       </ol>
     </div>`;
@@ -17797,6 +18503,367 @@ function generatePrintAISection() {
         device. This printed PDF contains all the information needed for an AI assistant to give specific,
         contextualised guidance on next steps.
       </p>
+    </div>`;
+}
+
+function generatePrintDecisionFramework() {
+  return `<div class="print-only print-decision-framework">
+      <h2>How to Use This Report</h2>
+      <div class="df-intro">
+        This report has a lot of information. The most useful thing you can do with it is
+        not "read every page" — it's to follow this 4-step framework. It works for both
+        students and parents.
+      </div>
+      <div class="df-step">
+        <div class="df-step-num">Step 1</div>
+        <div class="df-step-title">Read your top 3 career matches with details</div>
+        <div class="df-step-body">Skip the long career list. Focus on the top 3 — their day-in-life, education paths, salaries, and the 5 skills each requires. Note which one feels closest to how you actually like spending time, not just what sounds impressive.</div>
+      </div>
+      <div class="df-step">
+        <div class="df-step-num">Step 2</div>
+        <div class="df-step-title">Pick ONE that genuinely interests you to explore deeper</div>
+        <div class="df-step-body">Even if two or three feel equally good, pick one to explore first. You can always rotate. Spread attention across all three only if you have unusual time and discipline; most people make better progress by going deep on one.</div>
+      </div>
+      <div class="df-step">
+        <div class="df-step-num">Step 3</div>
+        <div class="df-step-title">Talk to ONE real professional in that field within 2 weeks</div>
+        <div class="df-step-body">A 20-minute conversation with someone who actually does this job will teach you more than 10 hours of reading. Use LinkedIn, parent's network, school alumni, or local professionals. Most people are happy to give 20 minutes when asked specifically and respectfully.</div>
+      </div>
+      <div class="df-step">
+        <div class="df-step-num">Step 4</div>
+        <div class="df-step-title">Try ONE small project that gives you a taste</div>
+        <div class="df-step-body">Use the "skills to build" list for your top career. Pick the smallest, lowest-stakes thing on it and do it. The goal isn't mastery — it's to feel what the actual work feels like in your hands. If it feels right, go deeper. If not, return to Step 2 with the next career.</div>
+      </div>
+      <div class="df-step" style="border-left-color:#f59e0b;background:#fffdf5;">
+        <div class="df-step-num" style="color:#f59e0b;">A note for parents</div>
+        <div class="df-step-body">Your role in this process is to make Step 3 (the professional conversation) easier — open your network, suggest people to talk to, drive them to the meeting if needed. The most important thing is to listen during Step 4: when your child tries the work, watch what energises them and what drains them. That signal is more reliable than any test result, including this one.</div>
+      </div>
+    </div>`;
+}
+
+function generatePrintComparisonTable() {
+  if (!State.session) return "";
+  let matches = [];
+  try {
+    const matchResult = computeCareerMatches(State.session);
+    matches = (matchResult.matches || []).slice(0, 3);
+  } catch (e) { return ""; }
+  if (matches.length === 0) return "";
+
+  // Compute student stream key for stream alignment column
+  const profile = State.profile || State.session.profile || {};
+  const streamKey = profile.stream || null;
+
+  // For each row, build cells across the matches
+  const cell = (val) => `<td>${val == null || val === "" ? "<span style=\"color:#999;\">—</span>" : val}</td>`;
+
+  const rows = [];
+  // Match score
+  rows.push(`<tr>
+    <td class="row-aspect">Match score</td>
+    ${matches.map(m => cell(`<strong style="color:#0D7377;">${Math.round(m.score)}%</strong>`)).join("")}
+  </tr>`);
+  // Sector + growth
+  rows.push(`<tr>
+    <td class="row-aspect">Sector &amp; outlook</td>
+    ${matches.map(m => cell(escapeHtml(m.career.sector || "") + (m.career.growthRate ? `<br><span style="color:#666;font-size:0.9em;">${escapeHtml(m.career.growthRate)}</span>` : ""))).join("")}
+  </tr>`);
+  // Holland code
+  rows.push(`<tr>
+    <td class="row-aspect">Holland code</td>
+    ${matches.map(m => cell(`<strong>${escapeHtml((m.career.hollandCodes || []).join(""))}</strong>`)).join("")}
+  </tr>`);
+  // Description
+  rows.push(`<tr>
+    <td class="row-aspect">What you'd do</td>
+    ${matches.map(m => cell(escapeHtml(m.career.description || ""))).join("")}
+  </tr>`);
+  // Salary range INR
+  rows.push(`<tr>
+    <td class="row-aspect">Salary (INR LPA)</td>
+    ${matches.map(m => cell(m.career.salaryINR ? `Entry ₹${m.career.salaryINR.entry}<br>Mid ₹${m.career.salaryINR.mid}<br>Senior ₹${m.career.salaryINR.senior}` : "")).join("")}
+  </tr>`);
+  // Education
+  rows.push(`<tr>
+    <td class="row-aspect">Typical education</td>
+    ${matches.map(m => cell(escapeHtml(m.career.education || ""))).join("")}
+  </tr>`);
+  // Stream alignment
+  if (streamKey) {
+    rows.push(`<tr>
+      <td class="row-aspect">Stream fit</td>
+      ${matches.map(m => {
+        const align = m.career.streamAlignment ? m.career.streamAlignment[streamKey] : null;
+        const color = align === "aligned" ? "#0D7377" : align === "adjacent" ? "#f59e0b" : "#666";
+        return cell(align ? `<span style="color:${color};font-weight:700;text-transform:capitalize;">${align}</span>` : "");
+      }).join("")}
+    </tr>`);
+  }
+  // Top 2 skills
+  rows.push(`<tr>
+    <td class="row-aspect">Top skills to build</td>
+    ${matches.map(m => cell((m.career.skillsToBuild || []).slice(0, 2).map(s => "• " + escapeHtml(s)).join("<br>"))).join("")}
+  </tr>`);
+  // Day in life
+  rows.push(`<tr>
+    <td class="row-aspect">Day in the life</td>
+    ${matches.map(m => cell(escapeHtml(m.career.dayInLife || ""))).join("")}
+  </tr>`);
+
+  const headers = matches.map((m, i) => `<th>#${i + 1} ${escapeHtml(m.career.name)}</th>`).join("");
+
+  return `<div class="print-only print-comparison">
+      <h2>Top 3 Career Matches — Side-by-Side</h2>
+      <p class="pc-intro">A direct comparison across the same dimensions, so you can see which match best fits your priorities (interests vs. earnings vs. ease of entry).</p>
+      <table class="print-comparison-table">
+        <thead>
+          <tr>
+            <th style="background:#fff;color:#0D7377;border-bottom:2px solid #0D7377;">Aspect</th>
+            ${headers}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.join("")}
+        </tbody>
+      </table>
+      <div class="print-comparison-tip">
+        <strong>How to use this table:</strong> Don't just pick the highest match score.
+        Look across rows — which career's day-in-life pulls you most? Which salary range
+        actually fits your family situation? Which education path is realistic given your
+        current stream? The best fit is rarely the highest number.
+      </div>
+    </div>`;
+}
+
+function generatePrintArchetypeDeepDive() {
+  if (!State.session) return "";
+  let archetype = null;
+  try {
+    const student = _buildPrintStudent(State.session);
+    archetype = assignArchetype(student);
+  } catch (e) { return ""; }
+  if (!archetype) return "";
+
+  const detail = PRINT_ARCHETYPE_NARRATIVES[archetype.id];
+  if (!detail) return "";
+
+  const thrivesBullets = (detail.thrives || []).map(t => `<li>${escapeHtml(t)}</li>`).join("");
+  const watchOutBullets = (detail.watchOut || []).map(w => `<li>${escapeHtml(w)}</li>`).join("");
+
+  return `<div class="print-only print-archetype-deepdive">
+      <h2>Archetype Deep Dive</h2>
+      <div class="ad-name">${escapeHtml(archetype.name)}</div>
+      <div class="ad-tagline">${escapeHtml(detail.tagline || archetype.description || "")}</div>
+      <div class="ad-narrative">${escapeHtml(detail.narrative || "")}</div>
+
+      <h3>Where you thrive</h3>
+      <ul>${thrivesBullets}</ul>
+
+      <h3>Growth edges to watch</h3>
+      <ul>${watchOutBullets}</ul>
+
+      ${detail.realWorld ? `<div class="ad-realworld"><strong>Real-world fit (Indian context):</strong> ${escapeHtml(detail.realWorld)}</div>` : ""}
+
+      <p style="font-size:9.5pt;color:#888;font-style:italic;margin-top:0.6cm;">
+        Archetypes are narrative summaries based on your percentile pattern, not clinical categories.
+        They're useful as a thinking aid; don't take them as fixed identity.
+      </p>
+    </div>`;
+}
+
+function generatePrintPathwaysAppendix() {
+  if (!State.session) return "";
+  let matches = [];
+  try {
+    const matchResult = computeCareerMatches(State.session);
+    matches = (matchResult.matches || []).slice(0, 5);
+  } catch (e) { return ""; }
+  if (matches.length === 0) return "";
+
+  const blocks = matches.map((m, i) => {
+    const c = m.career;
+    const pathway = PRINT_SECTOR_PATHWAYS[c.sector];
+    if (!pathway) return "";
+    return `<div class="pw-career">
+      <div class="pw-career-name">#${i + 1} ${escapeHtml(c.name)}</div>
+      <div class="pw-meta">${escapeHtml(c.sector || "")} · ${escapeHtml(c.education || "")}</div>
+      <div class="pw-block"><span class="pw-block-label">Entrance exams:</span>${escapeHtml(pathway.exams || "")}</div>
+      <div class="pw-block"><span class="pw-block-label">College tiers:</span>${escapeHtml(pathway.colleges || "")}</div>
+      <div class="pw-block"><span class="pw-block-label">Alternative pathways:</span>${escapeHtml(pathway.alternatives || "")}</div>
+      <div class="pw-block"><span class="pw-block-label">Cost reality check:</span>${escapeHtml(pathway.cost || "")}</div>
+    </div>`;
+  }).filter(b => b).join("");
+
+  if (!blocks) return "";
+
+  return `<div class="print-only print-pathways">
+      <h2>India-Specific Pathways for Your Top Careers</h2>
+      <p class="pw-intro">
+        For your top 5 career matches, here are India-specific entrance exams, college tier breakdowns,
+        and alternative pathways. Use this to anchor your action plan in real options. Not every path
+        requires the most prestigious institution; many successful careers come through tier-2 colleges
+        plus persistent skill-building.
+      </p>
+      ${blocks}
+    </div>`;
+}
+
+function generatePrintStreamGuidance() {
+  if (!State.session || State.session.ageGroup !== "C") return "";
+
+  let student = null;
+  let matches = [];
+  try {
+    student = _buildPrintStudent(State.session);
+    const matchResult = computeCareerMatches(State.session);
+    matches = (matchResult.matches || []).slice(0, 5);
+  } catch (e) { return ""; }
+  if (!student) return "";
+
+  const p = student.percentiles || {};
+  const top3Holland = student.hollandTop3 || [];
+
+  // Score each stream based on profile signals
+  const streamScores = {
+    "Science (PCM/PCB/PCMB)": 0,
+    "Commerce (with or without Maths)": 0,
+    "Arts / Humanities": 0,
+    "Vocational / Skill-based": 0
+  };
+  // Science: I (Investigative), R (Realistic), logical-math, numerical, logical
+  streamScores["Science (PCM/PCB/PCMB)"] += (p.I || 0) * 1.0;
+  streamScores["Science (PCM/PCB/PCMB)"] += (p.R || 0) * 0.6;
+  streamScores["Science (PCM/PCB/PCMB)"] += (p.logicalMath || 0) * 0.6;
+  streamScores["Science (PCM/PCB/PCMB)"] += (p.numerical || 0) * 0.4;
+  streamScores["Science (PCM/PCB/PCMB)"] += (p.logical || 0) * 0.4;
+  // Commerce: E (Enterprising), C (Conventional), numerical, conscientiousness
+  streamScores["Commerce (with or without Maths)"] += (p.E || 0) * 1.0;
+  streamScores["Commerce (with or without Maths)"] += (p.C || 0) * 0.7;
+  streamScores["Commerce (with or without Maths)"] += (p.numerical || 0) * 0.5;
+  streamScores["Commerce (with or without Maths)"] += (p.conscientiousness || 0) * 0.4;
+  // Arts: A (Artistic), S (Social), linguistic, openness, intrapersonal
+  streamScores["Arts / Humanities"] += (p.A || 0) * 1.0;
+  streamScores["Arts / Humanities"] += (p.S || 0) * 0.6;
+  streamScores["Arts / Humanities"] += (p.linguistic || 0) * 0.6;
+  streamScores["Arts / Humanities"] += (p.openness || 0) * 0.4;
+  streamScores["Arts / Humanities"] += (p.intrapersonal || 0) * 0.4;
+  // Vocational: R (Realistic), bodily-kinesthetic, mechanical
+  streamScores["Vocational / Skill-based"] += (p.R || 0) * 0.9;
+  streamScores["Vocational / Skill-based"] += (p.bodilyKinesthetic || 0) * 0.6;
+  streamScores["Vocational / Skill-based"] += (p.mechanical || 0) * 0.6;
+
+  const ranked = Object.entries(streamScores).sort((a, b) => b[1] - a[1]);
+  const topStream = ranked[0][0];
+  const totalScore = ranked.reduce((s, r) => s + r[1], 0);
+
+  // Build recommendation reason from Holland code
+  const hollandReasons = {
+    "I": "investigative interests (analytical, scientific thinking)",
+    "R": "realistic interests (hands-on, practical work)",
+    "A": "artistic interests (creative, expressive work)",
+    "S": "social interests (helping, teaching, working with people)",
+    "E": "enterprising interests (leading, persuading, business)",
+    "C": "conventional interests (organised, detail-oriented work)"
+  };
+  const topHollandReason = top3Holland.length > 0 ? hollandReasons[top3Holland[0]] : "";
+
+  // Build table rows
+  const tableRows = ranked.map(([stream, score]) => {
+    const pct = totalScore > 0 ? Math.round((score / totalScore) * 100) : 0;
+    return `<tr>
+      <td>${escapeHtml(stream)}</td>
+      <td><span style="display:inline-block;background:#0D7377;height:8px;width:${Math.min(100, pct * 1.5)}px;vertical-align:middle;border-radius:2px;"></span> ${pct}%</td>
+    </tr>`;
+  }).join("");
+
+  return `<div class="print-only print-stream-guidance">
+      <h2>Stream Selection Guidance</h2>
+      <p style="font-size:10.5pt;color:#555;margin-top:0.4cm;">
+        You're in Class 9–10, which means stream selection is approaching. Based on your profile,
+        here's an honest reading of which Class 11 stream aligns most with how you actually work and
+        what energises you. This is one input — combine it with your own intuition and a real
+        conversation with people who know you.
+      </p>
+
+      <div class="sg-recommendation">
+        <div class="sg-rec-label">Recommended primary stream</div>
+        <div class="sg-rec-stream">${escapeHtml(topStream)}</div>
+        <div class="sg-rec-reason">
+          Your strongest signals are toward ${topHollandReason ? topHollandReason + ", " : ""}which align well with this stream's typical demands.
+          ${matches.length > 0 ? `Your top career matches (${matches.slice(0, 3).map(m => escapeHtml(m.career.name)).join(", ")}) are
+          most accessible through this stream's natural pathways.` : ""}
+        </div>
+      </div>
+
+      <h3 style="color:#0D7377;font-size:12pt;margin-top:0.8cm;">Stream alignment scores</h3>
+      <table>
+        <thead><tr><th>Stream</th><th>Alignment with your profile</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+
+      <p style="font-size:10.5pt;color:#333;margin-top:0.8cm;">
+        <strong>Important caveats:</strong>
+        Stream selection in India often locks in pathways that are genuinely hard to change later
+        (especially Science → Arts is harder than Arts → Commerce, etc.). Treat this guidance as a
+        starting point — talk to: (1) someone in the career you most want, (2) your school counsellor,
+        (3) a trusted family member who has perspective on the financial reality of different paths.
+        Don't choose stream based purely on family pressure or social prestige; alignment with your
+        actual interests matters more than starting "the right" stream.
+      </p>
+
+      <div style="margin-top:0.8cm;padding:0.4cm 0.6cm;background:#fffdf5;border-left:4px solid #f59e0b;border-radius:0 4px 4px 0;font-size:10pt;">
+        <strong>Note:</strong> Even if your top recommendation is a different stream from what your family expects,
+        many careers can be reached through multiple stream paths. A creative profile entering Commerce can still
+        become a content creator, designer, or entrepreneur. Stream is one variable, not the only variable.
+      </div>
+    </div>`;
+}
+
+function generatePrintConversationStarters() {
+  if (!State.session) return "";
+  const profile = State.profile || State.session.profile || {};
+  let archetype = null;
+  let matches = [];
+  try {
+    const student = _buildPrintStudent(State.session);
+    archetype = assignArchetype(student);
+    const matchResult = computeCareerMatches(State.session);
+    matches = (matchResult.matches || []).slice(0, 3);
+  } catch (e) { return ""; }
+
+  const studentName = escapeHtml((profile.studentName || "your child").split(" ")[0]);
+  const archeName = archetype ? escapeHtml(archetype.name) : "their archetype";
+  const top1 = matches[0] ? escapeHtml(matches[0].career.name) : "their top career match";
+  const top2 = matches[1] ? escapeHtml(matches[1].career.name) : "";
+  const top3 = matches[2] ? escapeHtml(matches[2].career.name) : "";
+
+  const prompts = [
+    `"What part of the ${top1} description sounded most appealing to you? Was there anything that made you uncomfortable?"`,
+    `"This report says you're ${archeName}. Does that feel accurate to you, or does something else describe you better?"`,
+    `"If we set aside what other people expect, which of these three careers — ${top1}${top2 ? ", " + top2 : ""}${top3 ? ", " + top3 : ""} — would you pick to learn more about first?"`,
+    `"Is there a career you've thought about that's NOT in your top matches? What draws you to it? I want to understand."`,
+    `"What's one project or activity you could start in the next month that would let you test if ${top1} actually feels right?"`,
+    `"What's something about your current school subjects that genuinely energises you — and something that drains you? How does that match what this report says?"`,
+    `"If money and family pressure didn't exist, what would you most want to spend your time doing as a career?"`,
+    `"Is there a person you know who has a job you find interesting? Can we set up a conversation with them this month?"`
+  ];
+
+  return `<div class="print-only print-conversation-starters">
+      <h2>Conversation Starters for Parents</h2>
+      <p class="cs-intro">
+        These are specific prompts based on ${studentName}'s actual report. They're designed to
+        open genuine dialogue rather than checking boxes. The goal is for ${studentName} to feel
+        heard before any decisions get made.
+        Pick 2–3 to start with — going through all 8 in one sitting would feel like an interrogation.
+      </p>
+      ${prompts.map(p => `<div class="cs-prompt">${p}</div>`).join("")}
+
+      <div style="margin-top:0.6cm;padding:0.4cm 0.6cm;background:#f0f9f9;border-left:4px solid #0D7377;border-radius:0 4px 4px 0;font-size:10.5pt;">
+        <strong>How to use these:</strong> Pick one or two for your next car ride, walk, or quiet
+        evening. Listen more than you speak. The first answer is rarely the real answer — wait
+        through the silence. If ${studentName} says "I don't know," that's also useful information;
+        don't push past it. Try again in a week.
+      </div>
     </div>`;
 }
 
