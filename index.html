@@ -18234,16 +18234,18 @@ function _onBeforePrint() {
     if (!resultsScreen || !resultsScreen.classList.contains("active")) return;
     if (!State.session || !canShowResults(State.session)) return;
 
-    // Generate all print-only content first
-    const coverHtml = generatePrintCoverPage();
-    const tocHtml = generatePrintTOC();
-    const decisionHtml = generatePrintDecisionFramework();
-    const comparisonHtml = generatePrintComparisonTable();
-    const archetypeHtml = generatePrintArchetypeDeepDive();
-    const pathwaysHtml = generatePrintPathwaysAppendix();
-    const streamHtml = generatePrintStreamGuidance();
-    const conversationHtml = generatePrintConversationStarters();
-    const aiHtml = generatePrintAISection();
+    // Generate all print-only content first.
+    // Each section is wrapped in _safePrintSection so one section's failure
+    // doesn't break the others — graceful degradation per code review (2026-05-10).
+    const coverHtml = _safePrintSection(generatePrintCoverPage, "cover");
+    const tocHtml = _safePrintSection(generatePrintTOC, "toc");
+    const decisionHtml = _safePrintSection(generatePrintDecisionFramework, "decision");
+    const comparisonHtml = _safePrintSection(generatePrintComparisonTable, "comparison");
+    const archetypeHtml = _safePrintSection(generatePrintArchetypeDeepDive, "archetype");
+    const pathwaysHtml = _safePrintSection(generatePrintPathwaysAppendix, "pathways");
+    const streamHtml = _safePrintSection(generatePrintStreamGuidance, "stream");
+    const conversationHtml = _safePrintSection(generatePrintConversationStarters, "conversation");
+    const aiHtml = _safePrintSection(generatePrintAISection, "ai");
 
     // === Top section (inserted before existing results content) ===
     // Order: Cover -> TOC -> Decision Framework -> Comparison Table -> [existing content]
@@ -18290,6 +18292,48 @@ function _onAfterPrint() {
     _printInjectedNodes = [];
   } catch (e) {
     console.warn("Print enhancement (afterprint) failed:", e);
+  }
+}
+
+/**
+ * Defensive helpers for print enhancements (added 2026-05-10 per code review).
+ * Ensures graceful degradation if any career/match data is missing or malformed.
+ */
+function _safeCareerName(career, fallback) {
+  fallback = fallback || "career option";
+  if (career && typeof career === "object") {
+    var name = career.name;
+    if (typeof name === "string" && name.trim().length > 0) {
+      return escapeHtml(name);
+    }
+  }
+  return escapeHtml(fallback);
+}
+
+function _safeTopMatches(session, limit) {
+  limit = limit || 3;
+  try {
+    if (!session) return [];
+    var result = computeCareerMatches(session);
+    if (!result || !Array.isArray(result.matches)) return [];
+    return result.matches
+      .filter(function(m) {
+        return m && typeof m === "object" &&
+               typeof m.name === "string" && m.name.trim().length > 0;
+      })
+      .slice(0, limit);
+  } catch (err) {
+    console.warn("Safe match extraction failed:", err);
+    return [];
+  }
+}
+
+function _safePrintSection(fn, label) {
+  try {
+    return fn();
+  } catch (err) {
+    console.warn("Print section failed (" + (label || "anonymous") + "):", err);
+    return "";
   }
 }
 
@@ -18461,9 +18505,9 @@ function generatePrintAISection() {
   }).join("");
 
   const studentName = escapeHtml(profile.studentName || "this student");
-  const topCareerName = matches[0] ? escapeHtml(matches[0].name) : "[top career]";
+  const topCareerName = _safeCareerName(matches[0], "[top career]");
 
-  const samplePrompt = `My ${profile.studentName ? "child " + profile.studentName : "child"} is in ${profile.classGrade || ""}${profile.board ? " (" + profile.board + ")" : ""}${profile.stream ? ", currently in " + profile.stream : ""}. The attached MyCareerLens report shows their archetype is "${archetype ? archetype.name : ""}", Holland Code ${(student.hollandTop3 || []).join("")}. Their top 3 career matches are ${matches.slice(0, 3).map(m => m.name).join(", ")}. Based on this report, please suggest: (1) specific Indian colleges and entrance exams to target for their top match, (2) a realistic 6-month action plan, (3) 2-3 affordable government-college or scholarship pathways, (4) potential pitfalls or alternative careers that combine their top patterns. Cite specific information from the report where possible.`;
+  const samplePrompt = `My ${profile.studentName ? "child " + profile.studentName : "child"} is in ${profile.classGrade || ""}${profile.board ? " (" + profile.board + ")" : ""}${profile.stream ? ", currently in " + profile.stream : ""}. The attached MyCareerLens report shows their archetype is "${archetype ? archetype.name : ""}", Holland Code ${(student.hollandTop3 || []).join("")}. Their top 3 career matches are ${matches.slice(0, 3).map(m => (m && m.name) ? m.name : "(unnamed career)").join(", ")}. Based on this report, please suggest: (1) specific Indian colleges and entrance exams to target for their top match, (2) a realistic 6-month action plan, (3) 2-3 affordable government-college or scholarship pathways, (4) potential pitfalls or alternative careers that combine their top patterns. Cite specific information from the report where possible.`;
 
   return `<div class="print-only print-ai-section">
       <h2>For AI Tools / Further Assistance</h2>
@@ -18822,7 +18866,7 @@ function generatePrintStreamGuidance() {
         <div class="sg-rec-stream">${escapeHtml(topStream)}</div>
         <div class="sg-rec-reason">
           Your strongest signals are toward ${topHollandReason ? topHollandReason + ", " : ""}which align well with this stream's typical demands.
-          ${matches.length > 0 ? `Your top career matches (${matches.slice(0, 3).map(m => escapeHtml(m.name)).join(", ")}) are
+          ${matches.length > 0 ? `Your top career matches (${matches.slice(0, 3).map(m => (m && m.name) ? escapeHtml(m.name) : "an option").join(", ")}) are
           most accessible through this stream's natural pathways.` : ""}
         </div>
       </div>
@@ -18855,19 +18899,19 @@ function generatePrintConversationStarters() {
   if (!State.session) return "";
   const profile = State.profile || State.session.profile || {};
   let archetype = null;
-  let matches = [];
   try {
     const student = _buildPrintStudent(State.session);
     archetype = assignArchetype(student);
-    const matchResult = computeCareerMatches(State.session);
-    matches = (matchResult.matches || []).slice(0, 3);
-  } catch (e) { return ""; }
+  } catch (e) { /* archetype is null; fallback used below */ }
+
+  // Defensive top-matches extraction (returns empty array on any failure)
+  const matches = _safeTopMatches(State.session, 3);
 
   const studentName = escapeHtml((profile.studentName || "your child").split(" ")[0]);
-  const archeName = archetype ? escapeHtml(archetype.name) : "their archetype";
-  const top1 = matches[0] ? escapeHtml(matches[0].name) : "their top career match";
-  const top2 = matches[1] ? escapeHtml(matches[1].name) : "";
-  const top3 = matches[2] ? escapeHtml(matches[2].name) : "";
+  const archeName = (archetype && archetype.name) ? escapeHtml(archetype.name) : "their archetype";
+  const top1 = _safeCareerName(matches[0], "their top career match");
+  const top2 = _safeCareerName(matches[1], "another suitable option");
+  const top3 = _safeCareerName(matches[2], "an alternate path");
 
   const prompts = [
     `"What part of the ${top1} description sounded most appealing to you? Was there anything that made you uncomfortable?"`,
