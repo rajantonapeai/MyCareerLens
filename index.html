@@ -14133,8 +14133,11 @@ function validateName(name) {
    PROFILE WIZARD
    ============================================================ */
 
-const PW_TITLES = ["About the Student", "Academic Context", "Context & Goals"];
-const PW_STEPS = 3;
+// Single-screen consolidation (2026-05-10): 3-step wizard collapsed to 1 step.
+// Removed orphan fields (gender, learningPrefs, parentName, state, board, heTarget).
+// Only fields the scoring engine actually reads are collected.
+const PW_TITLES = ["Tell us about yourself"];
+const PW_STEPS = 1;
 
 function renderProfileWizard() {
   const body = document.getElementById("pwBody");
@@ -14144,17 +14147,15 @@ function renderProfileWizard() {
   const backBtn = document.getElementById("pwBack");
   const nextBtn = document.getElementById("pwNext");
 
-  title.textContent = PW_TITLES[State.profileStep - 1];
-  label.textContent = `Step ${State.profileStep} of ${PW_STEPS}`;
-  [...dots.children].forEach((d, i) => {
-    d.classList.remove("active", "completed");
-    if (i < State.profileStep - 1) d.classList.add("completed");
-    else if (i === State.profileStep - 1) d.classList.add("active");
-  });
-  backBtn.textContent = State.profileStep === 1 ? "← Home" : "← Back";
-  nextBtn.textContent = State.profileStep === PW_STEPS ? "Start Assessment →" : "Next →";
+  // Single-screen wizard: hide step label and progress dots (no longer meaningful for 1 step).
+  title.textContent = PW_TITLES[0];
+  if (label) label.style.display = "none";
+  if (dots) dots.style.display = "none";
+  backBtn.textContent = "← Home";
+  nextBtn.textContent = "Start Assessment →";
 
   const p = State.profile;
+  const isHigher = ["Class 11", "Class 12", "Undergraduate", "Gap Year"].includes(p.classGrade);
   if (State.profileStep === 1) {
     body.innerHTML = `
       <div class="field">
@@ -14163,45 +14164,19 @@ function renderProfileWizard() {
         <div class="error-msg hidden" id="err-pf-name"></div>
       </div>
       <div class="field">
-        <label class="label" for="pf-age">Age <span class="req">*</span></label>
-        <select class="select" id="pf-age">
-          <option value="">Select age</option>
-          ${Array.from({length: 16}, (_,i) => i+6).map(n => `<option value="${n}" ${p.age == n ? "selected" : ""}>${n}</option>`).join("")}
-        </select>
-        <div class="error-msg hidden" id="err-pf-age"></div>
-      </div>
-      <div class="field">
-        <label class="label">Gender</label>
-        <div class="radio-group" role="radiogroup" aria-label="Gender">
-          ${["Male", "Female", "Non-binary", "Prefer not to say"].map(g => `
-            <label class="radio-card ${p.gender === g ? "selected" : ""}">
-              <input type="radio" name="gender" value="${g}" ${p.gender === g ? "checked" : ""}>
-              ${g}
-            </label>
-          `).join("")}
-        </div>
-      </div>
-      <div class="field">
         <label class="label" for="pf-class">Current Class / Grade <span class="req">*</span></label>
         <select class="select" id="pf-class">
           <option value="">Select class</option>
           ${CLASS_OPTIONS.map(c => `<option value="${c}" ${p.classGrade === c ? "selected" : ""}>${c}</option>`).join("")}
         </select>
         <div class="error-msg hidden" id="err-pf-class"></div>
-        <div class="hint" id="hint-age-class"></div>
       </div>
-    `;
-    attachStep1Handlers();
-  } else if (State.profileStep === 2) {
-    const isHigher = ["Class 11", "Class 12", "Undergraduate", "Gap Year"].includes(p.classGrade);
-    body.innerHTML = `
       <div class="field">
         <label class="label" for="pf-board">School Board / Curriculum <span style="font-weight:normal;font-size:var(--fs-xs);color:var(--text-muted);">(optional)</span></label>
         <select class="select" id="pf-board">
-          <option value="">Not sure / Other</option>
+          <option value="">Select Board / Curriculum</option>
           ${BOARDS.map(b => `<option value="${b}" ${p.board === b ? "selected" : ""}>${b}</option>`).join("")}
         </select>
-        <div class="error-msg hidden" id="err-pf-board"></div>
       </div>
       <div class="field" id="field-stream" style="${isHigher ? "" : "display:none;"}">
         <label class="label" for="pf-stream">Current Stream ${isHigher ? '<span class="req">*</span>' : ""}</label>
@@ -14213,94 +14188,34 @@ function renderProfileWizard() {
           <label class="label" for="pf-ugfield">Specify your field</label>
           <input class="input" id="pf-ugfield" type="text" value="${escapeHtml(p.ugField || "")}" placeholder="e.g., BA Psychology, B.Com, B.Sc Chemistry" maxlength="80">
         </div>
-        ${!isHigher ? '<div class="hint">Stream selection starts from Class 11.</div>' : ''}
-      </div>
-      <div class="field">
-        <label class="label">Learning Preferences (optional)</label>
-        <div class="chip-group" id="chip-learning">
-          ${["Dyslexia", "ADHD", "Gifted", "None"].map(x => `
-            <label class="chip ${(p.learningPrefs || []).includes(x) ? "selected" : ""}">
-              <input type="checkbox" value="${x}" ${(p.learningPrefs || []).includes(x) ? "checked" : ""}>
-              ${x}
-            </label>
-          `).join("")}
-        </div>
-        <div class="hint">Select all that apply. These help us tailor your experience — your data never leaves this device.</div>
       </div>
     `;
-    attachStep2Handlers();
-  } else {
-    body.innerHTML = `
-      <div class="field">
-        <label class="label" for="pf-state">State <span style="font-weight:normal;font-size:var(--fs-xs);color:var(--text-muted);">(optional)</span></label>
-        <select class="select" id="pf-state">
-          <option value="">Prefer not to say</option>
-          ${STATES.map(s => `<option value="${s}" ${p.state === s ? "selected" : ""}>${s}</option>`).join("")}
-        </select>
-        <div class="error-msg hidden" id="err-pf-state"></div>
-      </div>
-      <div class="field">
-        <label class="label" for="pf-parent">Parent / Guardian Name <span style="font-weight:normal;font-size:var(--fs-xs);color:var(--text-muted);">(optional)</span></label>
-        <input class="input" id="pf-parent" type="text" value="${escapeHtml(p.parentName || "")}" placeholder="Optional — appears on the report if you fill it in" maxlength="50">
-        <div class="error-msg hidden" id="err-pf-parent"></div>
-      </div>
-      <div class="field">
-        <label class="label">Higher Education Target</label>
-        <div class="radio-group" role="radiogroup" aria-label="Higher Education Target">
-          ${["India", "Abroad", "Both", "Undecided"].map(t => `
-            <label class="radio-card ${p.heTarget === t ? "selected" : ""}">
-              <input type="radio" name="heTarget" value="${t}" ${p.heTarget === t ? "checked" : ""}>
-              ${t}
-            </label>
-          `).join("")}
-        </div>
-      </div>
-    `;
-    attachStep3Handlers();
+    attachStep1Handlers();
   }
 }
 
 function attachStep1Handlers() {
+  // Single-screen wizard: handlers for name, classGrade, board, stream/ugField.
+  // Age field removed (2026-05-10) — Class alone drives age-group routing
+  // via CLASS_TO_GROUP. Age was redundant.
   const nameEl = document.getElementById("pf-name");
-  const ageEl = document.getElementById("pf-age");
   const classEl = document.getElementById("pf-class");
-  const hint = document.getElementById("hint-age-class");
-  nameEl.addEventListener("input", () => { State.profile.studentName = nameEl.value; saveProfileDraft(); });
-  ageEl.addEventListener("change", () => { State.profile.age = Number(ageEl.value) || null; saveProfileDraft(); checkAgeClassMismatch(); });
-  classEl.addEventListener("change", () => { State.profile.classGrade = classEl.value; saveProfileDraft(); checkAgeClassMismatch(); });
-  document.querySelectorAll('input[name="gender"]').forEach(r => {
-    r.addEventListener("change", () => {
-      document.querySelectorAll('input[name="gender"]').forEach(x => x.parentElement.classList.toggle("selected", x.checked));
-      State.profile.gender = r.value;
-      saveProfileDraft();
-    });
-  });
-  function checkAgeClassMismatch() {
-    if (!hint) return;
-    hint.textContent = "";
-    const age = State.profile.age;
-    const cg = State.profile.classGrade;
-    if (!age || !cg) return;
-    const expected = typicalAgeForClass(cg);
-    if (expected && Math.abs(age - expected) >= 2) {
-      hint.textContent = "We've matched your assessment to your grade level for the most relevant questions.";
-    }
-  }
-}
-
-function typicalAgeForClass(classGrade) {
-  const map = { "Class 1": 6, "Class 2": 7, "Class 3": 8, "Class 4": 9, "Class 5": 10,
-    "Class 6": 11, "Class 7": 12, "Class 8": 13, "Class 9": 14, "Class 10": 15,
-    "Class 11": 16, "Class 12": 17, "Undergraduate": 19, "Gap Year": 18 };
-  return map[classGrade] || null;
-}
-
-function attachStep2Handlers() {
   const boardEl = document.getElementById("pf-board");
   const streamEl = document.getElementById("pf-stream");
   const ugFieldWrap = document.getElementById("field-ugfield");
   const ugFieldInput = document.getElementById("pf-ugfield");
-  boardEl.addEventListener("change", () => { State.profile.board = boardEl.value; saveProfileDraft(); });
+
+  nameEl.addEventListener("input", () => { State.profile.studentName = nameEl.value; saveProfileDraft(); });
+  if (boardEl) {
+    boardEl.addEventListener("change", () => { State.profile.board = boardEl.value; saveProfileDraft(); });
+  }
+  classEl.addEventListener("change", () => {
+    State.profile.classGrade = classEl.value;
+    saveProfileDraft();
+    // Re-render so the Stream field appears/disappears based on the new class.
+    renderProfileWizard();
+  });
+
   if (streamEl) {
     streamEl.addEventListener("change", () => {
       State.profile.stream = streamEl.value;
@@ -14317,40 +14232,15 @@ function attachStep2Handlers() {
   if (ugFieldInput) {
     ugFieldInput.addEventListener("input", () => { State.profile.ugField = ugFieldInput.value; saveProfileDraft(); });
   }
-  document.querySelectorAll('#chip-learning input[type="checkbox"]').forEach(cb => {
-    cb.addEventListener("change", () => {
-      const val = cb.value;
-      let prefs = State.profile.learningPrefs || [];
-      if (cb.checked) {
-        if (val === "None") prefs = ["None"];
-        else prefs = prefs.filter(x => x !== "None").concat([val]);
-      } else {
-        prefs = prefs.filter(x => x !== val);
-      }
-      State.profile.learningPrefs = prefs;
-      // Sync UI
-      document.querySelectorAll('#chip-learning input[type="checkbox"]').forEach(x => {
-        x.checked = prefs.includes(x.value);
-        x.parentElement.classList.toggle("selected", x.checked);
-      });
-      saveProfileDraft();
-    });
-  });
 }
 
-function attachStep3Handlers() {
-  const stateEl = document.getElementById("pf-state");
-  const parentEl = document.getElementById("pf-parent");
-  stateEl.addEventListener("change", () => { State.profile.state = stateEl.value; saveProfileDraft(); });
-  parentEl.addEventListener("input", () => { State.profile.parentName = parentEl.value; saveProfileDraft(); });
-  document.querySelectorAll('input[name="heTarget"]').forEach(r => {
-    r.addEventListener("change", () => {
-      document.querySelectorAll('input[name="heTarget"]').forEach(x => x.parentElement.classList.toggle("selected", x.checked));
-      State.profile.heTarget = r.value;
-      saveProfileDraft();
-    });
-  });
-}
+// typicalAgeForClass removed (2026-05-10) — was only used by
+// checkAgeClassMismatch which is also now removed.
+
+// Step 2 and Step 3 handlers removed in the single-screen consolidation (2026-05-10).
+// Their fields (board, learningPrefs, state, parentName, heTarget) were orphan data
+// — collected but never read for any user-facing purpose. The remaining stream/ugField
+// handlers were folded into attachStep1Handlers above.
 
 function saveProfileDraft() {
   // Persist draft profile as part of session so user can resume
@@ -14389,27 +14279,16 @@ function clearErrors() {
 }
 
 function validateStep(step) {
+  // Single-screen consolidation (2026-05-10): only one step now. Validate all required fields.
   clearErrors();
   const p = State.profile;
   let valid = true;
-  if (step === 1) {
-    const nameErr = validateName(p.studentName);
-    if (nameErr) { showError("pf-name", nameErr); valid = false; }
-    if (!p.age) { showError("pf-age", "Age is required"); valid = false; }
-    if (!p.classGrade) { showError("pf-class", "Class is required"); valid = false; }
-  } else if (step === 2) {
-    // P1 improvement (2026-05-10): Board is now optional — empty value treated as "Not sure / Other".
-    // Stream remains required for Class 11+ since it directly drives stream-alignment scoring.
-    const isHigher = ["Class 11", "Class 12", "Undergraduate", "Gap Year"].includes(p.classGrade);
-    if (isHigher && !p.stream) { showError("pf-stream", "Stream is required"); valid = false; }
-  } else if (step === 3) {
-    // P1 improvement (2026-05-10): State is now optional — empty value treated as "Prefer not to say".
-    // P1 improvement (2026-05-10): Parent name is optional. If provided, validate format softly without blocking.
-    if (p.parentName && p.parentName.trim().length > 0) {
-      const parentErr = validateName(p.parentName);
-      if (parentErr) { showError("pf-parent", parentErr); valid = false; }
-    }
-  }
+  const nameErr = validateName(p.studentName);
+  if (nameErr) { showError("pf-name", nameErr); valid = false; }
+  if (!p.classGrade) { showError("pf-class", "Class is required"); valid = false; }
+  // Stream is required only for Class 11+ since it drives stream-alignment scoring.
+  const isHigher = ["Class 11", "Class 12", "Undergraduate", "Gap Year"].includes(p.classGrade);
+  if (isHigher && !p.stream) { showError("pf-stream", "Stream is required"); valid = false; }
   return valid;
 }
 
@@ -15591,9 +15470,10 @@ function estimateCompletion(session) {
   // FIX #10: Only count answers that match questions in the current order
   const answered = order.filter(qid => answers[qid] != null).length;
   if (total > 0) return Math.round((answered / total) * 100);
-  // Before questions exist, estimate based on profile fields filled
+  // Before questions exist, estimate based on profile fields filled.
+  // Single-screen consolidation (2026-05-10): only the fields the scoring engine uses.
   const p = session.profile || {};
-  const fields = ["studentName","age","classGrade","board","state","parentName"];
+  const fields = ["studentName","classGrade"];
   const filled = fields.filter(f => p[f]).length;
   return Math.round((filled / fields.length) * 100);
 }
@@ -15620,10 +15500,9 @@ function resumeSession() {
 }
 
 function nextIncompleteProfileStep(p) {
-  if (!p.studentName || !p.age || !p.classGrade) return 1;
-  if (!p.board) return 2;
-  if (!p.state || !p.parentName) return 3;
-  return 3;
+  // Single-screen consolidation (2026-05-10): always 1.
+  // Incomplete fields are surfaced via validateStep on Next click.
+  return 1;
 }
 
 function showHistoryModal() {
