@@ -885,6 +885,40 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
 }
 .cta-secondary:hover { color: var(--primary); }
 
+/* 2026-05-10: dual CTA layout — Quick + Full as equal-weight buttons.
+   Side-by-side on desktop; stacks on narrow screens. */
+.cta-dual {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 720px;
+}
+.btn-cta-dual {
+  flex: 1 1 280px;
+  min-width: 240px;
+  max-width: 340px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.cta-dual-meta {
+  font-weight: 400;
+  font-size: 0.82em;
+  opacity: 0.88;
+}
+@media (max-width: 480px) {
+  .cta-dual { flex-direction: column; flex-wrap: nowrap; }
+  .btn-cta-dual { width: 100%; max-width: none; }
+}
+
 /* Phase 6: subtle expectation-setting note on landing page. Small, muted,
    below CTA — does not compete visually with the Start button but is visible
    to first-time users so they calibrate expectations before starting. */
@@ -2933,6 +2967,471 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
   h1, h2, h3 { color: black; }
   a { text-decoration: underline; }
 }
+
+/* ============================================================
+   PRINT/PDF ENHANCEMENTS — added 2026-05-10
+   Pure print-time additions. Zero impact on screen rendering.
+   ============================================================ */
+
+@page {
+  size: A4;
+  margin: 1.8cm 1.5cm 2.5cm 1.5cm;
+  @bottom-center {
+    content: "MyCareerLens · Free Career Test for Indian Students · rajantonapeai.github.io/mycareerlens · Page " counter(page) " of " counter(pages);
+    font-size: 8pt;
+    color: #888;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+}
+
+/* Print-only utility class: hidden on screen by default, shown when printing */
+.print-only { display: none; }
+
+@media print {
+  /* --- Hide transient screen-only chrome that should never appear in the printed report --- */
+  #toastArea, .toast-area, .toast,
+  #saveIndicator,
+  .a11y-launcher, .a11y-panel,
+  .credits-badge, .credits-badge-toggle, .credits-badge-content,
+  .skip-link {
+    display: none !important;
+  }
+
+  /* --- Force-expand <details> accordions in print
+         (the JS beforeprint handler also toggles d.open=true for reliability across browsers) --- */
+  details { display: block !important; }
+  details > summary {
+    list-style: none !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    font-weight: 700;
+  }
+  details > summary::-webkit-details-marker,
+  details > summary::marker {
+    display: none !important;
+  }
+  details > summary::before { content: "" !important; }
+  details > *:not(summary) { display: revert !important; }
+
+  /* --- Page-break-friendly layout --- */
+  .career-card { page-break-inside: avoid; }
+  h1, h2, h3, h4 { page-break-after: avoid; page-break-inside: avoid; }
+  table { page-break-inside: auto; }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+
+  /* --- Typography for A4 (slightly tighter than screen) --- */
+  body { font-size: 10.5pt; line-height: 1.45; }
+  h1 { font-size: 18pt; }
+  h2 { font-size: 14pt; }
+  h3 { font-size: 12pt; }
+  h4 { font-size: 11pt; }
+
+  /* --- Show URLs after links so the printed PDF retains references for AI tools / readers --- */
+  a[href]:not([href^="javascript:"]):not([href^="#"]):not(.no-print-url)::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #555;
+    word-break: break-all;
+  }
+  /* Don't append URLs inside footer / action buttons / nav */
+  .results-actions a::after,
+  .footer a::after,
+  .tab-bar a::after,
+  .legal-footer a::after { content: "" !important; }
+
+  /* --- Show print-only elements; hide screen-only --- */
+  .print-only { display: block !important; }
+  .screen-only { display: none !important; }
+
+  /* --- Cover page styles --- */
+  .print-cover-page {
+    page-break-after: always;
+    text-align: center;
+    padding: 2.5cm 0;
+  }
+  .print-cover-brand {
+    font-size: 14pt;
+    color: #0D7377;
+    letter-spacing: 0.3em;
+    margin-bottom: 0.5cm;
+    font-weight: 700;
+  }
+  .print-cover-tagline {
+    font-size: 22pt;
+    font-weight: 700;
+    margin-bottom: 1cm;
+    color: #1a1a1a;
+  }
+  .print-cover-name {
+    font-size: 28pt;
+    font-weight: 700;
+    color: #0D7377;
+    margin-bottom: 0.3cm;
+  }
+  .print-cover-meta {
+    font-size: 11pt;
+    color: #555;
+    margin-bottom: 2cm;
+  }
+  .print-cover-archetype {
+    background: #f0f9f9;
+    border: 1px solid #0D7377;
+    padding: 1cm;
+    margin: 0 1cm 1.5cm 1cm;
+    page-break-inside: avoid;
+    border-radius: 4px;
+  }
+  .print-cover-archetype .archetype-label {
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #0D7377;
+    font-weight: 700;
+  }
+  .print-cover-archetype .archetype-name {
+    font-size: 18pt;
+    font-weight: 700;
+    margin: 0.3cm 0;
+    color: #1a1a1a;
+  }
+  .print-cover-archetype .archetype-desc {
+    font-size: 11pt;
+    color: #333;
+    font-style: italic;
+  }
+  .print-cover-top3 {
+    margin: 0 1cm;
+  }
+  .print-cover-top3 .top3-label {
+    font-size: 10pt;
+    font-weight: 700;
+    margin-bottom: 0.5cm;
+    color: #0D7377;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .print-cover-top3 .top3-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.3cm 0.5cm;
+    border-bottom: 1px solid #ddd;
+    font-size: 11pt;
+    align-items: baseline;
+  }
+  .print-cover-top3 .top3-rank {
+    color: #0D7377;
+    font-weight: 700;
+    width: 1.5cm;
+    text-align: left;
+  }
+  .print-cover-top3 .top3-name {
+    flex: 1;
+    text-align: left;
+    padding: 0 0.5cm;
+  }
+  .print-cover-top3 .top3-score {
+    color: #0D7377;
+    font-weight: 700;
+    width: 1.5cm;
+    text-align: right;
+  }
+  .print-cover-footer {
+    margin-top: 2cm;
+    font-size: 9pt;
+    color: #888;
+    font-style: italic;
+  }
+
+  /* --- Table of Contents styles --- */
+  .print-toc {
+    page-break-after: always;
+    padding: 1cm 0;
+  }
+  .print-toc h2 {
+    color: #0D7377;
+    border-bottom: 2px solid #0D7377;
+    padding-bottom: 0.3cm;
+    margin-bottom: 0.8cm;
+  }
+  .print-toc ol {
+    font-size: 11pt;
+    line-height: 1.8;
+    padding-left: 1.5cm;
+  }
+  .print-toc ol li {
+    margin-bottom: 0.3cm;
+    color: #333;
+  }
+  .print-toc ol li strong { color: #0D7377; }
+
+  /* --- AI Tools section styles --- */
+  .print-ai-section {
+    page-break-before: always;
+    padding: 1cm 0;
+  }
+  .print-ai-section h2 {
+    color: #0D7377;
+    border-bottom: 2px solid #0D7377;
+    padding-bottom: 0.3cm;
+    margin-bottom: 0.4cm;
+  }
+  .print-ai-section .ai-explainer {
+    background: #f0f9f9;
+    border-left: 4px solid #0D7377;
+    padding: 0.5cm 0.7cm;
+    font-size: 10.5pt;
+    margin: 0.5cm 0 1cm 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .print-ai-section table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+    margin: 0.4cm 0 0.8cm 0;
+  }
+  .print-ai-section table th,
+  .print-ai-section table td {
+    border: 1px solid #bbb;
+    padding: 0.2cm 0.4cm;
+    text-align: left;
+    vertical-align: top;
+  }
+  .print-ai-section table th {
+    background: #f0f9f9;
+    font-weight: 700;
+    color: #0D7377;
+  }
+  .print-ai-section h3 {
+    color: #0D7377;
+    margin-top: 0.8cm;
+    margin-bottom: 0.3cm;
+  }
+  .print-ai-section pre {
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    padding: 0.5cm;
+    font-size: 8.5pt;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border-radius: 4px;
+  }
+  .print-ai-section .ai-prompt {
+    background: #fffdf5;
+    border-left: 4px solid #f59e0b;
+    padding: 0.4cm 0.7cm;
+    margin: 0.3cm 0;
+    font-size: 10pt;
+    border-radius: 0 4px 4px 0;
+  }
+  .print-ai-section .ai-prompt::before {
+    content: "\1F4AC  ";
+    color: #f59e0b;
+  }
+
+  /* ============================================================
+     Phase 4 PDF additions (2026-05-10)
+     Cover polish, footer, comparison table, decision framework,
+     archetype deep dive, pathways, stream guidance, conversation
+     starters, resource quality badges.
+     ============================================================ */
+
+  /* --- Cover page enhancements --- */
+  .print-cover-page {
+    background: linear-gradient(180deg, #f0f9f9 0%, #ffffff 100%);
+    page-break-after: always;
+    padding: 2cm 1.5cm;
+    border-top: 8px solid #0D7377;
+  }
+  .print-cover-tagline { letter-spacing: -0.01em; }
+  .print-cover-archetype { box-shadow: 0 2px 8px rgba(13, 115, 119, 0.08); }
+
+  /* --- Decision Framework (How to Use This Report) --- */
+  .print-decision-framework { page-break-after: always; padding: 0.5cm 0; }
+  .print-decision-framework h2 {
+    color: #0D7377; border-bottom: 2px solid #0D7377;
+    padding-bottom: 0.3cm; margin-bottom: 0.5cm;
+  }
+  .print-decision-framework .df-intro {
+    background: #f0f9f9; border-left: 4px solid #0D7377;
+    padding: 0.4cm 0.6cm; font-size: 11pt; margin-bottom: 0.8cm;
+    border-radius: 0 4px 4px 0;
+  }
+  .print-decision-framework .df-step {
+    background: #fff; border: 1px solid #ddd;
+    padding: 0.5cm 0.7cm; margin-bottom: 0.4cm;
+    border-left: 4px solid #0D7377; border-radius: 0 6px 6px 0;
+    page-break-inside: avoid;
+  }
+  .print-decision-framework .df-step-num {
+    font-size: 10pt; font-weight: 700; color: #0D7377;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .print-decision-framework .df-step-title {
+    font-size: 13pt; font-weight: 700; margin: 0.1cm 0 0.2cm 0; color: #1a1a1a;
+  }
+  .print-decision-framework .df-step-body { font-size: 10.5pt; color: #333; line-height: 1.5; }
+
+  /* --- Top 3 Comparison Table --- */
+  .print-comparison { page-break-before: always; page-break-after: always; padding: 0.5cm 0; }
+  .print-comparison h2 {
+    color: #0D7377; border-bottom: 2px solid #0D7377;
+    padding-bottom: 0.3cm; margin-bottom: 0.4cm;
+  }
+  .print-comparison .pc-intro {
+    font-size: 10.5pt; color: #555; font-style: italic;
+    margin: 0.3cm 0 0.5cm 0;
+  }
+  .print-comparison-table {
+    width: 100%; border-collapse: collapse; font-size: 9pt;
+    table-layout: fixed;
+  }
+  .print-comparison-table th, .print-comparison-table td {
+    border: 1px solid #ccc; padding: 0.2cm 0.3cm;
+    text-align: left; vertical-align: top;
+    word-wrap: break-word; overflow-wrap: break-word;
+  }
+  .print-comparison-table thead th {
+    background: #0D7377; color: white; font-weight: 700;
+    text-align: center; font-size: 10pt; padding: 0.3cm 0.2cm;
+  }
+  .print-comparison-table .row-aspect {
+    background: #f0f9f9; font-weight: 700;
+    color: #0D7377; width: 22%; font-size: 9pt;
+  }
+  .print-comparison-table .row-data { background: white; }
+  .print-comparison-tip {
+    margin-top: 0.5cm; font-size: 9.5pt;
+    color: #666; padding: 0.3cm 0.6cm;
+    border-left: 3px solid #f59e0b; background: #fffdf5;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* --- Archetype Deep Dive --- */
+  .print-archetype-deepdive { page-break-before: always; padding: 0.5cm 0; }
+  .print-archetype-deepdive h2 {
+    color: #0D7377; border-bottom: 2px solid #0D7377;
+    padding-bottom: 0.3cm;
+  }
+  .print-archetype-deepdive .ad-name {
+    font-size: 22pt; font-weight: 700;
+    color: #0D7377; margin: 0.5cm 0 0.2cm 0;
+  }
+  .print-archetype-deepdive .ad-tagline {
+    font-size: 12pt; font-style: italic;
+    color: #555; margin-bottom: 0.5cm;
+  }
+  .print-archetype-deepdive .ad-narrative {
+    font-size: 11pt; line-height: 1.6;
+    color: #333; margin-bottom: 0.6cm;
+  }
+  .print-archetype-deepdive h3 {
+    font-size: 12pt; color: #0D7377;
+    margin-top: 0.6cm; margin-bottom: 0.2cm;
+  }
+  .print-archetype-deepdive ul { padding-left: 0.6cm; font-size: 10.5pt; line-height: 1.5; }
+  .print-archetype-deepdive ul li { margin-bottom: 0.15cm; }
+  .print-archetype-deepdive .ad-realworld {
+    background: #f0f9f9; padding: 0.4cm 0.6cm; font-size: 10.5pt;
+    margin-top: 0.5cm; border-left: 4px solid #0D7377;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* --- India Pathways Appendix --- */
+  .print-pathways { page-break-before: always; padding: 0.5cm 0; }
+  .print-pathways h2 {
+    color: #0D7377; border-bottom: 2px solid #0D7377;
+    padding-bottom: 0.3cm;
+  }
+  .print-pathways .pw-intro {
+    font-size: 10.5pt; color: #555;
+    margin: 0.4cm 0 0.6cm 0; font-style: italic;
+  }
+  .print-pathways .pw-career {
+    page-break-inside: avoid;
+    margin-bottom: 0.6cm; padding-bottom: 0.5cm;
+    border-bottom: 1px solid #eee;
+  }
+  .print-pathways .pw-career-name {
+    font-size: 13pt; font-weight: 700;
+    color: #0D7377; margin-bottom: 0.2cm;
+  }
+  .print-pathways .pw-meta {
+    font-size: 9.5pt; color: #666; margin-bottom: 0.3cm;
+  }
+  .print-pathways .pw-block { margin-bottom: 0.3cm; font-size: 10.5pt; line-height: 1.5; }
+  .print-pathways .pw-block-label {
+    font-weight: 700; color: #0D7377;
+    display: inline-block; min-width: 4.5cm; vertical-align: top;
+  }
+
+  /* --- Stream Selection Guidance (Group C only) --- */
+  .print-stream-guidance { page-break-before: always; padding: 0.5cm 0; }
+  .print-stream-guidance h2 {
+    color: #0D7377; border-bottom: 2px solid #0D7377;
+    padding-bottom: 0.3cm;
+  }
+  .print-stream-guidance .sg-recommendation {
+    background: #f0f9f9; border-left: 4px solid #0D7377;
+    padding: 0.5cm 0.8cm; margin: 0.5cm 0;
+    font-size: 11pt; border-radius: 0 4px 4px 0;
+    page-break-inside: avoid;
+  }
+  .print-stream-guidance .sg-rec-label {
+    font-size: 9pt; text-transform: uppercase;
+    letter-spacing: 0.15em; color: #0D7377; font-weight: 700;
+  }
+  .print-stream-guidance .sg-rec-stream {
+    font-size: 16pt; font-weight: 700;
+    color: #0D7377; margin: 0.2cm 0;
+  }
+  .print-stream-guidance .sg-rec-reason {
+    font-size: 11pt; color: #333; line-height: 1.5;
+  }
+  .print-stream-guidance table {
+    width: 100%; border-collapse: collapse;
+    font-size: 9.5pt; margin: 0.5cm 0;
+  }
+  .print-stream-guidance th, .print-stream-guidance td {
+    border: 1px solid #ccc; padding: 0.2cm 0.3cm;
+    text-align: left; vertical-align: top;
+  }
+  .print-stream-guidance th {
+    background: #f0f9f9; font-weight: 700; color: #0D7377;
+  }
+
+  /* --- Archetype-specific Conversation Starters --- */
+  .print-conversation-starters { page-break-before: always; padding: 0.5cm 0; }
+  .print-conversation-starters h2 {
+    color: #0D7377; border-bottom: 2px solid #0D7377;
+    padding-bottom: 0.3cm;
+  }
+  .print-conversation-starters .cs-intro {
+    font-size: 10.5pt; color: #555; font-style: italic;
+    margin: 0.4cm 0 0.6cm 0;
+  }
+  .print-conversation-starters .cs-prompt {
+    background: #fffdf5; border-left: 4px solid #f59e0b;
+    padding: 0.4cm 0.6cm; margin: 0.3cm 0;
+    font-size: 10.5pt; border-radius: 0 4px 4px 0;
+    page-break-inside: avoid;
+  }
+  .print-conversation-starters .cs-prompt::before {
+    content: "\1F4AC  "; color: #f59e0b;
+  }
+
+  /* --- Resource quality badges --- */
+  .print-resource-badge {
+    display: inline-block; font-size: 0.75em;
+    padding: 1px 6px; border-radius: 3px;
+    margin-left: 0.2em; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .print-resource-badge.gov { background: #d1fae5; color: #065f46; }
+  .print-resource-badge.edu { background: #dbeafe; color: #1e40af; }
+  .print-resource-badge.npo { background: #fed7aa; color: #92400e; }
+  .print-resource-badge.video { background: #fef3c7; color: #92400e; }
+}
 </style>
 </head>
 <body>
@@ -3160,10 +3659,20 @@ code, kbd, pre, samp, .font-data { font-family: var(--font-data); }
              (SHOW_VISIT_COUNTER / SHOW_COMPLETION_COUNTER) are true. Silently invisible otherwise. -->
         <p id="landingCounters" class="hero-counters" style="display:none;text-align:center;font-size:0.9rem;color:var(--c-text-muted, #6b7280);margin-top:0.5rem;margin-bottom:0.5rem;" aria-live="polite"></p>
         <div class="cta-area">
-          <!-- P1 improvement (2026-05-10): Quick Exploration promoted to primary CTA. Full Assessment remains available as secondary link. -->
-          <button class="btn btn-primary btn-large btn-pulse" id="ctaStart">Start Quick Exploration → <span style="display:block;font-weight:normal;font-size:0.85em;opacity:0.85;margin-top:2px;">10 min · 20 questions</span></button>
+          <!-- 2026-05-10: dual CTA — Quick + Full as equal-weight buttons. User picks consciously.
+               IDs ctaStart and ctaQuick are preserved from prior versions; their handlers in initLanding()
+               are unchanged: ctaStart triggers Quick mode, ctaQuick triggers Full mode. -->
+          <div class="cta-dual">
+            <button class="btn btn-primary btn-cta-dual" id="ctaStart">
+              <span>Start Quick Exploration →</span>
+              <span class="cta-dual-meta">~10 min · 20 questions</span>
+            </button>
+            <button class="btn btn-primary btn-cta-dual" id="ctaQuick">
+              <span>Start Full Assessment →</span>
+              <span class="cta-dual-meta">~30 min · 60–75 questions</span>
+            </button>
+          </div>
           <a href="#" class="cta-secondary hidden" id="ctaHistory">View Previous Results</a>
-          <a href="#" class="cta-secondary" id="ctaQuick">Want more depth? Try the Full Assessment (60–75 questions, 20–40 min)</a>
           <p class="hero-calibration">A simple career exploration tool — not a formal test or professional assessment. A starting point for thinking about career directions; it doesn't predict your future or guarantee outcomes.</p>
         </div>
       </div>
@@ -16961,6 +17470,336 @@ function runSelfTests() {
    INITIALIZATION
    ============================================================ */
 
+/* ============================================================
+   PRINT/PDF ENHANCEMENTS — added 2026-05-10
+   ============================================================
+   Wires beforeprint/afterprint listeners that inject a cover page,
+   table of contents, and AI-readable structured section into the
+   active results screen at print time, and force-expand <details>
+   accordions so all career details and FAQ answers actually appear
+   in the printed PDF. All injected nodes are removed after print.
+
+   Live UX is COMPLETELY UNCHANGED. The DOM is only modified during
+   the print event lifecycle.
+   ============================================================ */
+
+let _printSavedDetailsState = [];
+let _printInjectedNodes = [];
+
+function setupPrintEnhancements() {
+  window.addEventListener("beforeprint", _onBeforePrint);
+  window.addEventListener("afterprint", _onAfterPrint);
+  // Some browsers (older Safari, some webview contexts) only fire matchMedia print.
+  // Defensive: also listen via matchMedia for the rare case beforeprint isn't dispatched.
+  try {
+    const mql = window.matchMedia("print");
+    if (mql && mql.addEventListener) {
+      mql.addEventListener("change", (e) => {
+        if (e.matches) _onBeforePrint();
+        else _onAfterPrint();
+      });
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function _onBeforePrint() {
+  try {
+    // Step 1: force-expand all <details> accordions so career details, FAQ answers,
+    // and other collapsible content actually print
+    _printSavedDetailsState = [];
+    document.querySelectorAll("details").forEach((d) => {
+      _printSavedDetailsState.push({ el: d, wasOpen: d.open });
+      d.open = true;
+    });
+
+    // Step 2: only inject cover/TOC/AI section if we're actually on the results screen
+    const resultsScreen = document.getElementById("screen-results");
+    if (!resultsScreen || !resultsScreen.classList.contains("active")) return;
+    if (!State.session || !canShowResults(State.session)) return;
+
+    const coverHtml = generatePrintCoverPage();
+    const tocHtml = generatePrintTOC();
+    const aiHtml = generatePrintAISection();
+
+    // Cover + TOC at the top
+    if (coverHtml) {
+      const coverWrap = document.createElement("div");
+      coverWrap.id = "_print-cover-wrap";
+      coverWrap.innerHTML = coverHtml;
+      resultsScreen.insertBefore(coverWrap, resultsScreen.firstChild);
+      _printInjectedNodes.push(coverWrap);
+    }
+    if (tocHtml) {
+      const tocWrap = document.createElement("div");
+      tocWrap.id = "_print-toc-wrap";
+      tocWrap.innerHTML = tocHtml;
+      const cover = document.getElementById("_print-cover-wrap");
+      if (cover) cover.after(tocWrap);
+      else resultsScreen.insertBefore(tocWrap, resultsScreen.firstChild);
+      _printInjectedNodes.push(tocWrap);
+    }
+
+    // AI section at the bottom
+    if (aiHtml) {
+      const aiWrap = document.createElement("div");
+      aiWrap.id = "_print-ai-wrap";
+      aiWrap.innerHTML = aiHtml;
+      resultsScreen.appendChild(aiWrap);
+      _printInjectedNodes.push(aiWrap);
+    }
+  } catch (e) {
+    console.warn("Print enhancement (beforeprint) failed:", e);
+  }
+}
+
+function _onAfterPrint() {
+  try {
+    _printSavedDetailsState.forEach(({ el, wasOpen }) => { try { el.open = wasOpen; } catch (e) {} });
+    _printSavedDetailsState = [];
+    _printInjectedNodes.forEach((n) => { try { if (n && n.parentNode) n.remove(); } catch (e) {} });
+    _printInjectedNodes = [];
+  } catch (e) {
+    console.warn("Print enhancement (afterprint) failed:", e);
+  }
+}
+
+/**
+ * Build the 'student' object that scoring/archetype functions expect,
+ * derived from session percentiles. Same pattern renderProfileTab uses.
+ */
+function _buildPrintStudent(session) {
+  const rawScores = computeRawScores(session);
+  const percentiles = normalizeScores(rawScores, session.ageGroup, session);
+  const hollandRanked = ["R","I","A","S","E","C"]
+    .map(k => ({ k, v: percentiles[k] || 0 }))
+    .sort((a, b) => b.v - a.v);
+  const hollandTop3 = hollandRanked.slice(0, 3).map(h => h.k);
+  return {
+    profile: session.profile || {},
+    ageGroup: session.ageGroup,
+    hollandTop3,
+    hollandCode: hollandTop3.join(""),
+    streamKey: session.profile && session.profile.stream ? session.profile.stream : null,
+    percentiles
+  };
+}
+
+function generatePrintCoverPage() {
+  if (!State.session) return "";
+  const profile = State.profile || State.session.profile || {};
+  const session = State.session;
+
+  let archetype = null;
+  let top3 = [];
+  let student = null;
+  try {
+    student = _buildPrintStudent(session);
+    archetype = assignArchetype(student);
+    const matchResult = computeCareerMatches(session);
+    top3 = (matchResult.matches || []).slice(0, 3);
+  } catch (e) {
+    console.warn("Print cover: data computation failed", e);
+  }
+
+  const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  const metaParts = [];
+  if (profile.classGrade) metaParts.push(escapeHtml(profile.classGrade));
+  if (profile.board) metaParts.push(escapeHtml(profile.board));
+  if (profile.stream) metaParts.push(escapeHtml(profile.stream));
+  metaParts.push(today);
+
+  const archetypeBlock = archetype ? `
+      <div class="print-cover-archetype">
+        <div class="archetype-label">Your Archetype</div>
+        <div class="archetype-name">${escapeHtml(archetype.name)}</div>
+        <div class="archetype-desc">${escapeHtml(archetype.description)}</div>
+      </div>` : "";
+
+  const top3Block = top3.length ? `
+      <div class="print-cover-top3">
+        <div class="top3-label">Your Top 3 Career Matches</div>
+        ${top3.map((m, i) => `
+          <div class="top3-row">
+            <div class="top3-rank">#${i + 1}</div>
+            <div class="top3-name">${escapeHtml(m.career.name)}</div>
+            <div class="top3-score">${Math.round(m.score)}%</div>
+          </div>`).join("")}
+      </div>` : "";
+
+  return `<div class="print-only print-cover-page">
+      <div class="print-cover-brand">MYCAREERLENS</div>
+      <div class="print-cover-tagline">Your Career Direction Report</div>
+      <div class="print-cover-name">${escapeHtml(profile.studentName || "Student")}</div>
+      <div class="print-cover-meta">${metaParts.join(" · ")}</div>
+      ${archetypeBlock}
+      ${top3Block}
+      <div class="print-cover-footer">A starting point for thinking about career directions — not a prediction.</div>
+    </div>`;
+}
+
+function generatePrintTOC() {
+  return `<div class="print-only print-toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><strong>Your Profile</strong> — archetype, Holland Code, top strengths, growth areas</li>
+        <li><strong>Full Dimension Breakdown</strong> — all measured dimensions across 9 modules</li>
+        <li><strong>Your Top Career Matches</strong> — with details, salary, education paths, skills, free resources</li>
+        <li><strong>Your Personalised Action Plan</strong> — short-term and long-term steps</li>
+        <li><strong>Parent Guide</strong> — supporting your child's exploration</li>
+        <li><strong>For AI Tools</strong> — structured profile + matches for use with AI assistants</li>
+      </ol>
+    </div>`;
+}
+
+function generatePrintAISection() {
+  if (!State.session) return "";
+  const profile = State.profile || State.session.profile || {};
+  const session = State.session;
+
+  let student = null;
+  let archetype = null;
+  let matches = [];
+  let percentiles = {};
+  try {
+    student = _buildPrintStudent(session);
+    archetype = assignArchetype(student);
+    percentiles = student.percentiles || {};
+    const matchResult = computeCareerMatches(session);
+    matches = (matchResult.matches || []).slice(0, 10);
+  } catch (e) {
+    console.warn("Print AI section: data computation failed", e);
+    return "";
+  }
+
+  const pct = (v) => Math.round(v || 0);
+  const groupLabel = GROUP_LABELS[session.ageGroup] || session.ageGroup || "";
+
+  // Profile summary table
+  const profileRows = [
+    ["Student name", escapeHtml(profile.studentName || "")],
+    ["Current class", escapeHtml(profile.classGrade || "")],
+    profile.board ? ["School board", escapeHtml(profile.board)] : null,
+    profile.stream ? ["Current stream", escapeHtml(profile.stream)] : null,
+    ["Age group routing", escapeHtml(groupLabel)],
+    ["Assessment mode", session.assessmentMode === "quick" ? "Quick (20 questions)" : "Full (60–75 questions)"],
+    archetype ? ["Archetype", escapeHtml(archetype.name) + " — " + escapeHtml(archetype.description)] : null,
+    ["Holland Code (top 3)", (student.hollandTop3 || []).join(", ")]
+  ].filter(Boolean).map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("");
+
+  // Dimensions table (sorted by score descending)
+  const dimensionRows = Object.entries(percentiles)
+    .sort((a, b) => b[1] - a[1])
+    .map(([dim, val]) => `<tr><td>${escapeHtml(dim)}</td><td>${pct(val)}%</td></tr>`)
+    .join("");
+
+  // Career matches table with rich detail
+  const careerRows = matches.map((m, i) => {
+    const c = m.career;
+    const salary = c.salaryINR
+      ? `Entry ₹${c.salaryINR.entry} · Mid ₹${c.salaryINR.mid} · Senior ₹${c.salaryINR.senior} LPA`
+      : "";
+    return `<tr>
+        <td>${i + 1}</td>
+        <td><strong>${escapeHtml(c.name)}</strong><br><span style="font-size:0.85em;color:#555;">${escapeHtml(c.sector || "")}</span></td>
+        <td>${pct(m.score)}%</td>
+        <td>${escapeHtml((c.hollandCodes || []).join(""))}</td>
+        <td>${escapeHtml(c.description || "")}</td>
+        <td>${salary}</td>
+        <td>${escapeHtml(c.education || "")}</td>
+      </tr>`;
+  }).join("");
+
+  // Skills + Resources for top 3 (more focused; full 10 for the table above)
+  const top3DetailBlocks = matches.slice(0, 3).map((m, i) => {
+    const c = m.career;
+    const skills = (c.skillsToBuild || []).map(s => `<li>${escapeHtml(s)}</li>`).join("");
+    const resources = (c.freeResources || []).map(r =>
+      `<li><strong>${escapeHtml(r.name || "")}</strong>${r.tag ? " <em>(" + escapeHtml(r.tag) + ")</em>" : ""}<br>${escapeHtml(r.desc || "")}<br><a href="${escapeHtml(r.url || "")}">${escapeHtml(r.url || "")}</a></li>`
+    ).join("");
+    return `<h4 style="color:#0D7377;margin-top:0.6cm;">#${i + 1} ${escapeHtml(c.name)} — full detail</h4>
+      ${c.dayInLife ? `<p><strong>A typical day:</strong> ${escapeHtml(c.dayInLife)}</p>` : ""}
+      ${skills ? `<p><strong>Skills to build:</strong></p><ol>${skills}</ol>` : ""}
+      ${resources ? `<p><strong>Free learning resources:</strong></p><ul>${resources}</ul>` : ""}`;
+  }).join("");
+
+  const studentName = escapeHtml(profile.studentName || "this student");
+  const topCareerName = matches[0] ? escapeHtml(matches[0].career.name) : "[top career]";
+
+  const samplePrompt = `My ${profile.studentName ? "child " + profile.studentName : "child"} is in ${profile.classGrade || ""}${profile.board ? " (" + profile.board + ")" : ""}${profile.stream ? ", currently in " + profile.stream : ""}. The attached MyCareerLens report shows their archetype is "${archetype ? archetype.name : ""}", Holland Code ${(student.hollandTop3 || []).join("")}. Their top 3 career matches are ${matches.slice(0, 3).map(m => m.career.name).join(", ")}. Based on this report, please suggest: (1) specific Indian colleges and entrance exams to target for their top match, (2) a realistic 6-month action plan, (3) 2-3 affordable government-college or scholarship pathways, (4) potential pitfalls or alternative careers that combine their top patterns. Cite specific information from the report where possible.`;
+
+  return `<div class="print-only print-ai-section">
+      <h2>For AI Tools / Further Assistance</h2>
+
+      <div class="ai-explainer">
+        <strong>How to use this section:</strong> Upload this PDF to your preferred AI assistant
+        (ChatGPT, Claude, Gemini, etc.) and ask follow-up questions about specific careers,
+        colleges, entrance exams, scholarships, or next steps. The structured data below gives
+        the AI complete context about ${studentName}'s profile and matches so it can give specific,
+        contextualised guidance instead of generic advice.
+      </div>
+
+      <h3>1. Profile Summary</h3>
+      <table>${profileRows}</table>
+
+      <h3>2. All Measured Dimensions (sorted by score)</h3>
+      <table>
+        <thead><tr><th>Dimension</th><th>Percentile</th></tr></thead>
+        <tbody>${dimensionRows}</tbody>
+      </table>
+
+      <h3>3. Top 10 Career Matches — Structured Data</h3>
+      <table>
+        <thead><tr><th>#</th><th>Career</th><th>Score</th><th>Holland</th><th>Description</th><th>Salary (INR LPA)</th><th>Education</th></tr></thead>
+        <tbody>${careerRows}</tbody>
+      </table>
+
+      <h3>4. Top 3 Careers — Full Detail</h3>
+      ${top3DetailBlocks}
+
+      <h3>5. Methodology Note for the AI</h3>
+      <p style="font-size:9.5pt;">MyCareerLens scores 265 questions across 9 modules using five established academic frameworks:
+      Holland's RIASEC interest types (1959), Big Five (OCEAN) personality model, Gardner's Multiple Intelligences (1983),
+      Fleming's VARK learning style preferences, and Goleman's Emotional Intelligence (1995). Career matching uses
+      age-group-specific weighted blend of RIASEC overlap, aptitude, intelligence, personality, EQ/creativity/leadership
+      blend, and values alignment, with a stream-alignment multiplier and inconsistency-detection downgrades.
+      Scores indicate <em>alignment</em> between the student's profile and each career's typical demands — not a prediction
+      of success. Scores cap at 99. The implementation is independently developed and is not peer-reviewed; it is best
+      treated as a research-informed starting point for exploration, not a clinical instrument.</p>
+
+      <h3>6. Suggested Questions for the AI</h3>
+      <div class="ai-prompt">"Based on the attached MyCareerLens report, what specific Indian colleges and entrance exams should ${studentName} prepare for to pursue ${topCareerName}? Please mention typical cut-offs and alternatives at different score levels."</div>
+      <div class="ai-prompt">"What are 3 small projects or activities ${studentName} could start in the next 90 days to genuinely test fit with the top 3 career matches in this report?"</div>
+      <div class="ai-prompt">"My family has financial constraints. What are affordable government-college, scholarship, and online-learning pathways into ${topCareerName} in India?"</div>
+      <div class="ai-prompt">"Looking at the dimension scores in this report, what 2–3 transferable strengths could ${studentName} highlight on a college application or scholarship essay? Quote specific numbers."</div>
+      <div class="ai-prompt">"Are there any career paths NOT listed in the top 10 that would also fit ${studentName}'s profile (Holland ${(student.hollandTop3 || []).join("")}, archetype ${archetype ? archetype.name : ""})? Suggest 2–3 with reasoning."</div>
+
+      <h3>7. Sample Comprehensive Prompt</h3>
+      <pre>${escapeHtml(samplePrompt)}</pre>
+
+      <h3>8. Glossary of Frameworks Used in This Report</h3>
+      <table>
+        <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><th>Holland Code (RIASEC)</th><td>John Holland's six interest types: Realistic, Investigative, Artistic, Social, Enterprising, Conventional. The top 3 letters describe primary interest pattern.</td></tr>
+          <tr><th>Big Five (OCEAN)</th><td>Openness, Conscientiousness, Extraversion, Agreeableness, Emotional Stability. Most academically supported personality model.</td></tr>
+          <tr><th>Multiple Intelligences (MI)</th><td>Howard Gardner's theory of distinct intelligence types: linguistic, logical-mathematical, spatial, musical, bodily-kinesthetic, interpersonal, intrapersonal, naturalist.</td></tr>
+          <tr><th>Learning Style Preferences (VARK)</th><td>Visual, Auditory, Read/Write, Kinesthetic. Inspired by Neil Fleming's VARK framework.</td></tr>
+          <tr><th>Emotional Intelligence (EQ)</th><td>Daniel Goleman's framework: self-awareness, self-regulation, empathy, relationship management.</td></tr>
+          <tr><th>Match Score</th><td>0–99 measure of alignment between student's profile and a career's typical demands. Caps at 99 — no career reaches 100.</td></tr>
+          <tr><th>Stream Alignment</th><td>"Aligned" (direct), "Adjacent" (possible with some pivot), or "Pivot" (requires significant additional preparation) for the student's current stream.</td></tr>
+          <tr><th>Archetype</th><td>One of 16 personality archetypes assigned based on the student's percentile pattern. A narrative summary device, not a clinical category.</td></tr>
+        </tbody>
+      </table>
+
+      <p style="font-size:9pt;color:#666;font-style:italic;margin-top:0.8cm;">
+        This report was generated by MyCareerLens (rajantonapeai.github.io/mycareerlens) — a free, no-signup,
+        privacy-preserving career exploration tool for Indian students. The student's responses never leave their
+        device. This printed PDF contains all the information needed for an AI assistant to give specific,
+        contextualised guidance on next steps.
+      </p>
+    </div>`;
+}
+
 function initCreditsBadge() {
   const badge = document.querySelector(".credits-badge");
   const toggle = document.querySelector(".credits-badge-toggle");
@@ -17010,6 +17849,7 @@ function init() {
   initResultsTabs();
   initResultsActions();
   initCreditsBadge();
+  setupPrintEnhancements();
 
   // v4.1.9: Initialize anonymous counters (visits + completions).
   // Fires AFTER all other init so even if counter init failed (network down,
