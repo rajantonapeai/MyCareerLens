@@ -18351,8 +18351,8 @@ function generatePrintCoverPage() {
         ${top3.map((m, i) => `
           <div class="top3-row">
             <div class="top3-rank">#${i + 1}</div>
-            <div class="top3-name">${escapeHtml(m.career.name)}</div>
-            <div class="top3-score">${Math.round(m.score)}%</div>
+            <div class="top3-name">${escapeHtml(m.name)}</div>
+            <div class="top3-score">${Math.round(m.matchScore)}%</div>
           </div>`).join("")}
       </div>` : "";
 
@@ -18432,14 +18432,14 @@ function generatePrintAISection() {
 
   // Career matches table with rich detail
   const careerRows = matches.map((m, i) => {
-    const c = m.career;
+    const c = m;
     const salary = c.salaryINR
       ? `Entry ₹${c.salaryINR.entry} · Mid ₹${c.salaryINR.mid} · Senior ₹${c.salaryINR.senior} LPA`
       : "";
     return `<tr>
         <td>${i + 1}</td>
         <td><strong>${escapeHtml(c.name)}</strong><br><span style="font-size:0.85em;color:#555;">${escapeHtml(c.sector || "")}</span></td>
-        <td>${pct(m.score)}%</td>
+        <td>${pct(m.matchScore)}%</td>
         <td>${escapeHtml((c.hollandCodes || []).join(""))}</td>
         <td>${escapeHtml(c.description || "")}</td>
         <td>${salary}</td>
@@ -18449,7 +18449,7 @@ function generatePrintAISection() {
 
   // Skills + Resources for top 3 (more focused; full 10 for the table above)
   const top3DetailBlocks = matches.slice(0, 3).map((m, i) => {
-    const c = m.career;
+    const c = m;
     const skills = (c.skillsToBuild || []).map(s => `<li>${escapeHtml(s)}</li>`).join("");
     const resources = (c.freeResources || []).map(r =>
       `<li><strong>${escapeHtml(r.name || "")}</strong>${r.tag ? " <em>(" + escapeHtml(r.tag) + ")</em>" : ""}<br>${escapeHtml(r.desc || "")}<br><a href="${escapeHtml(r.url || "")}">${escapeHtml(r.url || "")}</a></li>`
@@ -18463,7 +18463,7 @@ function generatePrintAISection() {
   const studentName = escapeHtml(profile.studentName || "this student");
   const topCareerName = matches[0] ? escapeHtml(matches[0].career.name) : "[top career]";
 
-  const samplePrompt = `My ${profile.studentName ? "child " + profile.studentName : "child"} is in ${profile.classGrade || ""}${profile.board ? " (" + profile.board + ")" : ""}${profile.stream ? ", currently in " + profile.stream : ""}. The attached MyCareerLens report shows their archetype is "${archetype ? archetype.name : ""}", Holland Code ${(student.hollandTop3 || []).join("")}. Their top 3 career matches are ${matches.slice(0, 3).map(m => m.career.name).join(", ")}. Based on this report, please suggest: (1) specific Indian colleges and entrance exams to target for their top match, (2) a realistic 6-month action plan, (3) 2-3 affordable government-college or scholarship pathways, (4) potential pitfalls or alternative careers that combine their top patterns. Cite specific information from the report where possible.`;
+  const samplePrompt = `My ${profile.studentName ? "child " + profile.studentName : "child"} is in ${profile.classGrade || ""}${profile.board ? " (" + profile.board + ")" : ""}${profile.stream ? ", currently in " + profile.stream : ""}. The attached MyCareerLens report shows their archetype is "${archetype ? archetype.name : ""}", Holland Code ${(student.hollandTop3 || []).join("")}. Their top 3 career matches are ${matches.slice(0, 3).map(m => m.name).join(", ")}. Based on this report, please suggest: (1) specific Indian colleges and entrance exams to target for their top match, (2) a realistic 6-month action plan, (3) 2-3 affordable government-college or scholarship pathways, (4) potential pitfalls or alternative careers that combine their top patterns. Cite specific information from the report where possible.`;
 
   return `<div class="print-only print-ai-section">
       <h2>For AI Tools / Further Assistance</h2>
@@ -18593,39 +18593,39 @@ function generatePrintComparisonTable() {
   // Match score
   rows.push(`<tr>
     <td class="row-aspect">Match score</td>
-    ${matches.map(m => cell(`<strong style="color:#0D7377;">${Math.round(m.score)}%</strong>`)).join("")}
+    ${matches.map(m => cell(`<strong style="color:#0D7377;">${Math.round(m.matchScore)}%</strong>`)).join("")}
   </tr>`);
   // Sector + growth
   rows.push(`<tr>
     <td class="row-aspect">Sector &amp; outlook</td>
-    ${matches.map(m => cell(escapeHtml(m.career.sector || "") + (m.career.growthRate ? `<br><span style="color:#666;font-size:0.9em;">${escapeHtml(m.career.growthRate)}</span>` : ""))).join("")}
+    ${matches.map(m => cell(escapeHtml(m.sector || "") + (m.growthRate ? `<br><span style="color:#666;font-size:0.9em;">${escapeHtml(m.growthRate)}</span>` : ""))).join("")}
   </tr>`);
   // Holland code
   rows.push(`<tr>
     <td class="row-aspect">Holland code</td>
-    ${matches.map(m => cell(`<strong>${escapeHtml((m.career.hollandCodes || []).join(""))}</strong>`)).join("")}
+    ${matches.map(m => cell(`<strong>${escapeHtml((m.hollandCodes || []).join(""))}</strong>`)).join("")}
   </tr>`);
   // Description
   rows.push(`<tr>
     <td class="row-aspect">What you'd do</td>
-    ${matches.map(m => cell(escapeHtml(m.career.description || ""))).join("")}
+    ${matches.map(m => cell(escapeHtml(m.description || ""))).join("")}
   </tr>`);
   // Salary range INR
   rows.push(`<tr>
     <td class="row-aspect">Salary (INR LPA)</td>
-    ${matches.map(m => cell(m.career.salaryINR ? `Entry ₹${m.career.salaryINR.entry}<br>Mid ₹${m.career.salaryINR.mid}<br>Senior ₹${m.career.salaryINR.senior}` : "")).join("")}
+    ${matches.map(m => cell(m.salaryINR ? `Entry ₹${m.salaryINR.entry}<br>Mid ₹${m.salaryINR.mid}<br>Senior ₹${m.salaryINR.senior}` : "")).join("")}
   </tr>`);
   // Education
   rows.push(`<tr>
     <td class="row-aspect">Typical education</td>
-    ${matches.map(m => cell(escapeHtml(m.career.education || ""))).join("")}
+    ${matches.map(m => cell(escapeHtml(m.education || ""))).join("")}
   </tr>`);
   // Stream alignment
   if (streamKey) {
     rows.push(`<tr>
       <td class="row-aspect">Stream fit</td>
       ${matches.map(m => {
-        const align = m.career.streamAlignment ? m.career.streamAlignment[streamKey] : null;
+        const align = m.streamAlignment ? m.streamAlignment[streamKey] : null;
         const color = align === "aligned" ? "#0D7377" : align === "adjacent" ? "#f59e0b" : "#666";
         return cell(align ? `<span style="color:${color};font-weight:700;text-transform:capitalize;">${align}</span>` : "");
       }).join("")}
@@ -18634,15 +18634,15 @@ function generatePrintComparisonTable() {
   // Top 2 skills
   rows.push(`<tr>
     <td class="row-aspect">Top skills to build</td>
-    ${matches.map(m => cell((m.career.skillsToBuild || []).slice(0, 2).map(s => "• " + escapeHtml(s)).join("<br>"))).join("")}
+    ${matches.map(m => cell((m.skillsToBuild || []).slice(0, 2).map(s => "• " + escapeHtml(s)).join("<br>"))).join("")}
   </tr>`);
   // Day in life
   rows.push(`<tr>
     <td class="row-aspect">Day in the life</td>
-    ${matches.map(m => cell(escapeHtml(m.career.dayInLife || ""))).join("")}
+    ${matches.map(m => cell(escapeHtml(m.dayInLife || ""))).join("")}
   </tr>`);
 
-  const headers = matches.map((m, i) => `<th>#${i + 1} ${escapeHtml(m.career.name)}</th>`).join("");
+  const headers = matches.map((m, i) => `<th>#${i + 1} ${escapeHtml(m.name)}</th>`).join("");
 
   return `<div class="print-only print-comparison">
       <h2>Top 3 Career Matches — Side-by-Side</h2>
@@ -18713,7 +18713,7 @@ function generatePrintPathwaysAppendix() {
   if (matches.length === 0) return "";
 
   const blocks = matches.map((m, i) => {
-    const c = m.career;
+    const c = m;
     const pathway = PRINT_SECTOR_PATHWAYS[c.sector];
     if (!pathway) return "";
     return `<div class="pw-career">
@@ -18822,7 +18822,7 @@ function generatePrintStreamGuidance() {
         <div class="sg-rec-stream">${escapeHtml(topStream)}</div>
         <div class="sg-rec-reason">
           Your strongest signals are toward ${topHollandReason ? topHollandReason + ", " : ""}which align well with this stream's typical demands.
-          ${matches.length > 0 ? `Your top career matches (${matches.slice(0, 3).map(m => escapeHtml(m.career.name)).join(", ")}) are
+          ${matches.length > 0 ? `Your top career matches (${matches.slice(0, 3).map(m => escapeHtml(m.name)).join(", ")}) are
           most accessible through this stream's natural pathways.` : ""}
         </div>
       </div>
