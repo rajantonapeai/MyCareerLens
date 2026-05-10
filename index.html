@@ -18461,7 +18461,7 @@ function generatePrintAISection() {
   }).join("");
 
   const studentName = escapeHtml(profile.studentName || "this student");
-  const topCareerName = matches[0] ? escapeHtml(matches[0].career.name) : "[top career]";
+  const topCareerName = matches[0] ? escapeHtml(matches[0].name) : "[top career]";
 
   const samplePrompt = `My ${profile.studentName ? "child " + profile.studentName : "child"} is in ${profile.classGrade || ""}${profile.board ? " (" + profile.board + ")" : ""}${profile.stream ? ", currently in " + profile.stream : ""}. The attached MyCareerLens report shows their archetype is "${archetype ? archetype.name : ""}", Holland Code ${(student.hollandTop3 || []).join("")}. Their top 3 career matches are ${matches.slice(0, 3).map(m => m.name).join(", ")}. Based on this report, please suggest: (1) specific Indian colleges and entrance exams to target for their top match, (2) a realistic 6-month action plan, (3) 2-3 affordable government-college or scholarship pathways, (4) potential pitfalls or alternative careers that combine their top patterns. Cite specific information from the report where possible.`;
 
@@ -18865,9 +18865,9 @@ function generatePrintConversationStarters() {
 
   const studentName = escapeHtml((profile.studentName || "your child").split(" ")[0]);
   const archeName = archetype ? escapeHtml(archetype.name) : "their archetype";
-  const top1 = matches[0] ? escapeHtml(matches[0].career.name) : "their top career match";
-  const top2 = matches[1] ? escapeHtml(matches[1].career.name) : "";
-  const top3 = matches[2] ? escapeHtml(matches[2].career.name) : "";
+  const top1 = matches[0] ? escapeHtml(matches[0].name) : "their top career match";
+  const top2 = matches[1] ? escapeHtml(matches[1].name) : "";
+  const top3 = matches[2] ? escapeHtml(matches[2].name) : "";
 
   const prompts = [
     `"What part of the ${top1} description sounded most appealing to you? Was there anything that made you uncomfortable?"`,
